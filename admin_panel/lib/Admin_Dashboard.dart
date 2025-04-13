@@ -3,6 +3,7 @@ import 'package:admin_panel/community_highlights_page.dart';
 import 'package:admin_panel/overview_page.dart';
 import 'package:admin_panel/recycling_tips_page.dart';
 import 'package:admin_panel/users_page.dart';
+import 'package:admin_panel/AdminForumPage.dart';
 import 'package:flutter/material.dart';
 
 class AdminDashboard extends StatefulWidget {
@@ -46,6 +47,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 _navItem("Announcements", Icons.announcement),
                 _navItem("Community Highlights", Icons.star),
                 _navItem("Recycling Tips", Icons.recycling),
+                _navItem("Manage Forum", Icons.forum),
+
               ],
             ),
           ),
@@ -82,7 +85,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
       case "Community Highlights":
         return const CommunityHighlightsPage();
       case "Recycling Tips":
-        return const RecyclingTipsPage();
+        return const AdminRecyclingPanel();
+      case "Manage Forum":
+       return const AdminForumPage();
+
       default:
         return const Center(child: Text("Page not found"));
     }
