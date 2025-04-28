@@ -1,4 +1,4 @@
-/*import 'dart:convert';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:qr_code_scanner_plus/qr_code_scanner_plus.dart';
@@ -39,8 +39,10 @@ class _QRScannerPageState extends State<QRScannerPage> {
 
         await FirebaseFirestore.instance.runTransaction((transaction) async {
           final userSnap = await transaction.get(userRef);
-          final points = userSnap['points'] ?? 0;
-          final events = userSnap['events_attended'] ?? 0;
+final userData = userSnap.data() as Map<String, dynamic>;
+final points = userData.containsKey('points') ? userData['points'] : 0;
+final events = userData.containsKey('events_attended') ? userData['events_attended'] : 0;
+
 
           transaction.update(userRef, {
             'points': points + 10,
@@ -127,4 +129,3 @@ Future<void> _checkCameraPermission() async {
     );
   }
 }
-*/

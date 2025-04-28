@@ -1,8 +1,8 @@
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'dart:convert';
 import 'package:qr_flutter/qr_flutter.dart';
 
 class AllHighlightsPage extends StatelessWidget {
@@ -20,8 +20,7 @@ class AllHighlightsPage extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
-          return Center(
-              child: Text("Error loading highlights: ${snapshot.error}"));
+          return Center(child: Text("Error loading highlights: ${snapshot.error}"));
         }
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return const Center(child: Text("No community highlights yet."));
@@ -58,8 +57,7 @@ class AllHighlightsPage extends StatelessWidget {
                   children: [
                     // Event image.
                     ClipRRect(
-                      borderRadius:
-                          const BorderRadius.vertical(top: Radius.circular(12)),
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
                       child: imageUrl != null && imageUrl.toString().isNotEmpty
                           ? Image.network(
                               imageUrl,
@@ -67,35 +65,26 @@ class AllHighlightsPage extends StatelessWidget {
                               width: double.infinity,
                               height: 200,
                               errorBuilder: (context, error, stackTrace) =>
-                                  const Center(
-                                      child:
-                                          Icon(Icons.broken_image, size: 60)),
+                                  const Center(child: Icon(Icons.broken_image, size: 60)),
                             )
                           : Container(
                               height: 200,
                               color: Colors.grey[300],
-                              child: const Center(
-                                  child: Icon(Icons.image,
-                                      size: 50, color: Colors.grey)),
+                              child: const Center(child: Icon(Icons.image, size: 50, color: Colors.grey)),
                             ),
                     ),
                     // Title container.
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 6),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
                           color: Colors.green.shade100,
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
                           title,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green,
-                          ),
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.green),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -103,30 +92,21 @@ class AllHighlightsPage extends StatelessWidget {
                     // Date & Time Row (if available).
                     if (dateStr.isNotEmpty && timeStr.isNotEmpty)
                       Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8.0, vertical: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4),
                         child: Row(
                           children: [
-                            const Icon(Icons.calendar_today,
-                                size: 14, color: Colors.grey),
+                            const Icon(Icons.calendar_today, size: 14, color: Colors.grey),
                             const SizedBox(width: 4),
                             Text(
                               dateStr,
-                              style: const TextStyle(
-                                  fontSize: 12,
-                                  fontStyle: FontStyle.italic,
-                                  color: Colors.grey),
+                              style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: Colors.grey),
                             ),
                             const SizedBox(width: 8),
-                            const Icon(Icons.access_time,
-                                size: 14, color: Colors.grey),
+                            const Icon(Icons.access_time, size: 14, color: Colors.grey),
                             const SizedBox(width: 4),
                             Text(
                               timeStr,
-                              style: const TextStyle(
-                                  fontSize: 12,
-                                  fontStyle: FontStyle.italic,
-                                  color: Colors.grey),
+                              style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: Colors.grey),
                             ),
                           ],
                         ),
@@ -167,12 +147,18 @@ class AllHighlightsPage extends StatelessWidget {
             dateStr = DateFormat('EEE, MMM d').format(dt);
             timeStr = DateFormat('hh:mm a').format(dt);
           }
-          // Get participants list (or empty list).
+          // Get participants list.
           List<dynamic> participants = data.containsKey('participants')
               ? List<dynamic>.from(data['participants'])
               : [];
           bool isParticipating = participants.contains(currentUser.uid);
           int participantsCount = participants.length;
+
+          // Get attended users list and check if the user is already marked as attended.
+          List<dynamic> attendedUsers = data.containsKey('attendedUsers')
+              ? List<dynamic>.from(data['attendedUsers'])
+              : [];
+          bool isAttended = attendedUsers.contains(currentUser.uid);
 
           return Dialog(
             insetPadding: EdgeInsets.zero,
@@ -199,12 +185,11 @@ class AllHighlightsPage extends StatelessWidget {
                               imageUrl,
                               fit: BoxFit.cover,
                               height: 300,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  Container(
-                                    height: 300,
-                                    color: Colors.grey[300],
-                                    child: const Icon(Icons.broken_image, size: 60),
-                                  ),
+                              errorBuilder: (context, error, stackTrace) => Container(
+                                height: 300,
+                                color: Colors.grey[300],
+                                child: const Icon(Icons.broken_image, size: 60),
+                              ),
                             ),
                           )
                         : Container(
@@ -231,20 +216,14 @@ class AllHighlightsPage extends StatelessWidget {
                                 const SizedBox(width: 4),
                                 Text(
                                   dateStr,
-                                  style: const TextStyle(
-                                      fontSize: 14,
-                                      fontStyle: FontStyle.italic,
-                                      color: Colors.grey),
+                                  style: const TextStyle(fontSize: 14, fontStyle: FontStyle.italic, color: Colors.grey),
                                 ),
                                 const SizedBox(width: 16),
                                 const Icon(Icons.access_time, size: 16, color: Colors.grey),
                                 const SizedBox(width: 4),
                                 Text(
                                   timeStr,
-                                  style: const TextStyle(
-                                      fontSize: 14,
-                                      fontStyle: FontStyle.italic,
-                                      color: Colors.grey),
+                                  style: const TextStyle(fontSize: 14, fontStyle: FontStyle.italic, color: Colors.grey),
                                 ),
                               ],
                             ),
@@ -259,101 +238,107 @@ class AllHighlightsPage extends StatelessWidget {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: isParticipating ? Colors.grey : Colors.blue,
+                              // Only allow participation if the user has not been marked as attended.
+                              if (!isAttended)
+                                ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: isParticipating ? Colors.grey : Colors.blue,
+                                  ),
+                                  onPressed: () async {
+                                    if (!isParticipating) {
+                                      await FirebaseFirestore.instance
+                                          .collection('community_highlights')
+                                          .doc(docId)
+                                          .update({
+                                        'participants': FieldValue.arrayUnion([currentUser.uid])
+                                      });
+                                    } else {
+                                      await FirebaseFirestore.instance
+                                          .collection('community_highlights')
+                                          .doc(docId)
+                                          .update({
+                                        'participants': FieldValue.arrayRemove([currentUser.uid])
+                                      });
+                                    }
+                                  },
+                                  child: Text(
+                                    isParticipating ? "Withdraw" : "Participate",
+                                    style: const TextStyle(color: Colors.white),
+                                  ),
+                                )
+                              else
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green.shade100,
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: const Text(
+                                    "Attended",
+                                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.green),
+                                  ),
                                 ),
-                                onPressed: () async {
-                                  if (!isParticipating) {
-                                    // Add user to participants.
-                                    await FirebaseFirestore.instance
-                                        .collection('community_highlights')
-                                        .doc(docId)
-                                        .update({
-                                      'participants': FieldValue.arrayUnion([currentUser.uid])
-                                    });
-                                  } else {
-                                    // Optionally remove the user.
-                                    await FirebaseFirestore.instance
-                                        .collection('community_highlights')
-                                        .doc(docId)
-                                        .update({
-                                      'participants': FieldValue.arrayRemove([currentUser.uid])
-                                    });
-                                  }
-                                },
-                                child: Text(
-                                  isParticipating ? "Withdraw" : "Participate",
-                                  style: const TextStyle(color: Colors.white),
-                                ),
-                              ),
                               Text(
                                 "$participantsCount participants",
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
-                                ),
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
                               ),
                             ],
                           ),
-                          if (isParticipating) ...[
-  const SizedBox(height: 12),
-  Center(
-    child: ElevatedButton.icon(
-      icon: const Icon(Icons.qr_code),
-      label: const Text("Generate Attendance QR"),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.green,
-      ),
-      onPressed: () {
-        final String uid = FirebaseAuth.instance.currentUser!.uid;
-        final Map<String, String> data = {"uid": uid, "eventId": docId};
-        final String qrData = jsonEncode(data);
-         showDialog(
-  context: context,
-  builder: (BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        width: MediaQuery.of(context).size.width * 0.7,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              "Show this QR to Admin",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-            ),
-            const SizedBox(height: 16),
-            QrImageView(
-              data: qrData,
-              version: QrVersions.auto,
-              size: 200,
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              "Ask the admin to scan this QR code to mark your attendance.",
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Close"),
-            ),
-          ],
-        ),
-      ),
-    );
-  },
-);
-
-
-      },
-    ),
-  ),
-],
+                          const SizedBox(height: 12),
+                          // QR Button section: only visible if the user is participating and not already marked as attended.
+                          if (isParticipating && !isAttended)
+                            Center(
+                              child: ElevatedButton.icon(
+                                icon: const Icon(Icons.qr_code),
+                                label: const Text("Generate Attendance QR"),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.green,
+                                ),
+                                onPressed: () {
+                                  final String uid = currentUser.uid;
+                                  final Map<String, String> qrPayload = {"uid": uid, "eventId": docId};
+                                  final String qrData = jsonEncode(qrPayload);
+                                  showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return Dialog(
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                        child: Container(
+                                          padding: const EdgeInsets.all(20),
+                                          width: MediaQuery.of(context).size.width * 0.7,
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const Text(
+                                                "Show this QR to Admin",
+                                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                                              ),
+                                              const SizedBox(height: 16),
+                                              QrImageView(
+                                                data: qrData,
+                                                version: QrVersions.auto,
+                                                size: 200,
+                                              ),
+                                              const SizedBox(height: 16),
+                                              const Text(
+                                                "Ask the admin to scan this QR code to mark your attendance.",
+                                                textAlign: TextAlign.center,
+                                                style: TextStyle(fontSize: 14),
+                                              ),
+                                              const SizedBox(height: 20),
+                                              ElevatedButton(
+                                                onPressed: () => Navigator.pop(context),
+                                                child: const Text("Close"),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
+                              ),
+                            ),
                         ],
                       ),
                     ),
@@ -369,14 +354,12 @@ class AllHighlightsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Main page shows the grid of community highlights.
     return Scaffold(
       appBar: AppBar(
         title: const Text("Community Events"),
         backgroundColor: Colors.green,
       ),
       body: _buildHighlightsList(context),
-
     );
   }
 }

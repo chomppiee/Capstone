@@ -1,7 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:segregate1/Widgets/services/firebase_service.dart';
 import 'DonationDetailsPage.dart'; // Make sure this page is implemented
 
 class DonationList extends StatelessWidget {
@@ -116,32 +115,5 @@ class DonationList extends StatelessWidget {
   }
 }
 
-void _showClaimConfirmation(
-  BuildContext context,
-  String donationId,
-  String userId,
-) {
-  showDialog(
-    context: context,
-    builder: (BuildContext dialogContext) {
-      return AlertDialog(
-        title: const Text('Claim Donation'),
-        content: const Text('Are you sure you want to claim this donation?'),
-        actions: [
-          TextButton(
-            child: const Text('Cancel'),
-            onPressed: () => Navigator.pop(dialogContext),
-          ),
-          TextButton(
-            child: const Text('Claim', style: TextStyle(color: Colors.green)),
-            onPressed: () async {
-              await claimDonation(donationId, userId);
-              Navigator.pop(dialogContext);
-              Navigator.pop(context); // Close the expanded view after claiming
-            },
-          ),
-        ],
-      );
-    },
-  );
-}
+
+

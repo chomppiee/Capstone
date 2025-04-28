@@ -7,7 +7,10 @@ class AdminPage extends StatelessWidget {
 
   // Navigate to AttendancePage.
   void _navigateToAttendance(BuildContext context) {
-
+  Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => const QRScannerPage()), // replace with your page
+  );
 
   }
 
