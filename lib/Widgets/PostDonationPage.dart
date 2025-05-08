@@ -5,7 +5,7 @@ import 'package:segregate1/Widgets/services/image_service.dart';
 
 class PostDonationPage extends StatefulWidget {
   const PostDonationPage({super.key});
-  
+
   @override
   State<PostDonationPage> createState() => _PostDonationPageState();
 }
@@ -13,13 +13,13 @@ class PostDonationPage extends StatefulWidget {
 class _PostDonationPageState extends State<PostDonationPage> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descController = TextEditingController();
-  // Combined pickup time controller
   final TextEditingController _pickupTimeController = TextEditingController();
-  
+
   String? _selectedImagePath;
   String? _selectedCategory;
 
-  // List of categories with "Other" included
+  bool _isPosting = false; // ← loading flag
+
   final List<String> _categories = [
     'Adult Clothing',
     'Children\'s Clothing',
@@ -71,48 +71,66 @@ class _PostDonationPageState extends State<PostDonationPage> {
   }
 
   Future<void> _selectTimeRange() async {
-    // Show time picker for start time with custom help text styling.
     TimeOfDay? startTime = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
       helpText: 'Select Pickup Start Time',
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            timePickerTheme: const TimePickerThemeData(
-              helpTextStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.blue),
-            ),
+      builder: (context, child) => Theme(
+        data: Theme.of(context).copyWith(
+          timePickerTheme: const TimePickerThemeData(
+            helpTextStyle:
+                TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.blue),
           ),
-          child: child!,
-        );
-      },
+        ),
+        child: child!,
+      ),
     );
     if (startTime == null) return;
 
-    // Show time picker for end time with custom help text styling.
     TimeOfDay? endTime = await showTimePicker(
       context: context,
       initialTime: startTime,
       helpText: 'Select Pickup End Time',
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            timePickerTheme: const TimePickerThemeData(
-              helpTextStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.blue),
-            ),
+      builder: (context, child) => Theme(
+        data: Theme.of(context).copyWith(
+          timePickerTheme: const TimePickerThemeData(
+            helpTextStyle:
+                TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.blue),
           ),
-          child: child!,
-        );
-      },
+        ),
+        child: child!,
+      ),
     );
     if (endTime == null) return;
 
     setState(() {
-      _pickupTimeController.text = "${startTime.format(context)} - ${endTime.format(context)}";
+      _pickupTimeController.text =
+          "${startTime.format(context)} - ${endTime.format(context)}";
     });
   }
 
-  void _submitDonation() async {
+  void _showLoadingDialog() {
+    showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (_) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              CircularProgressIndicator(),
+              SizedBox(width: 20),
+              Text("Posting Donation..."),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _submitDonation() async {
     if (_titleController.text.isEmpty ||
         _descController.text.isEmpty ||
         _selectedImagePath == null ||
@@ -120,11 +138,21 @@ class _PostDonationPageState extends State<PostDonationPage> {
         _pickupTimeController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text(
-                'Please fill all fields, select an image, choose a category, and select available pickup time')),
+          content: Text(
+            'Please fill all fields, select an image, choose a category, and select available pickup time',
+          ),
+        ),
       );
       return;
     }
+
+    if (_isPosting) return; // already in progress
+
+    setState(() {
+      _isPosting = true;
+    });
+
+    _showLoadingDialog();
 
     await postDonation(
       _titleController.text,
@@ -132,12 +160,17 @@ class _PostDonationPageState extends State<PostDonationPage> {
       _selectedImagePath!,
       _selectedCategory!,
       context,
-      pickupTime: _pickupTimeController.text, // Pass the combined pickup time
+      pickupTime: _pickupTimeController.text,
     );
 
     if (mounted) {
-      Navigator.pop(context); // Go back after posting
+      Navigator.pop(context); // close loading dialog
+      Navigator.pop(context); // go back
     }
+
+    setState(() {
+      _isPosting = false;
+    });
   }
 
   @override
@@ -170,10 +203,7 @@ class _PostDonationPageState extends State<PostDonationPage> {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: const Text(
-                'Attach Image',
-                style: TextStyle(color: Colors.white),
-              ),
+              child: const Text('Attach Image', style: TextStyle(color: Colors.white)),
             ),
             const SizedBox(height: 12),
             TextField(
@@ -194,7 +224,6 @@ class _PostDonationPageState extends State<PostDonationPage> {
               maxLines: 3,
             ),
             const SizedBox(height: 12),
-            // Dropdown for category selection with hint text
             DropdownButtonFormField<String>(
               decoration: const InputDecoration(
                 labelText: 'Category',
@@ -202,20 +231,12 @@ class _PostDonationPageState extends State<PostDonationPage> {
               ),
               value: _selectedCategory,
               hint: const Text('Select a category'),
-              items: _categories.map((String category) {
-                return DropdownMenuItem<String>(
-                  value: category,
-                  child: Text(category),
-                );
+              items: _categories.map((category) {
+                return DropdownMenuItem(value: category, child: Text(category));
               }).toList(),
-              onChanged: (newValue) {
-                setState(() {
-                  _selectedCategory = newValue;
-                });
-              },
+              onChanged: (v) => setState(() => _selectedCategory = v),
             ),
             const SizedBox(height: 12),
-            // Single input for available pickup time (combined start - end)
             TextFormField(
               controller: _pickupTimeController,
               readOnly: true,
@@ -229,19 +250,20 @@ class _PostDonationPageState extends State<PostDonationPage> {
             ),
             const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: _submitDonation,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF1E88E5),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text(
-                'POST',
-                style: TextStyle(color: Colors.white, fontSize: 16),
-              ),
-            ),
+  onPressed: _isPosting ? null : _submitDonation,
+  style: ElevatedButton.styleFrom(
+    backgroundColor: const Color(0xFF1E88E5),
+    padding: const EdgeInsets.symmetric(vertical: 14),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(8),
+    ),
+  ),
+  child: const Text(
+    'POST',
+    style: TextStyle(color: Colors.white, fontSize: 16),
+  ),
+),
+
           ],
         ),
       ),

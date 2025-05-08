@@ -6,17 +6,16 @@ import 'ChatPage.dart';
 class ChatListPage extends StatelessWidget {
   const ChatListPage({Key? key}) : super(key: key);
 
-  // A helper method to get a user's name from Firestore based on their UID.
+  /// Fetches the username for [uid], or returns "Unknown" if not found.
   Future<String> _getUserName(String uid) async {
-    final DocumentSnapshot doc = await FirebaseFirestore.instance
+    final doc = await FirebaseFirestore.instance
         .collection('users')
         .doc(uid)
         .get();
-    if (doc.exists) {
-      final data = doc.data() as Map<String, dynamic>;
-      return data['username'] ?? "Unknown";
-    }
-    return "Unknown";
+    if (!doc.exists) return "Unknown";
+    final data = doc.data();
+    if (data == null) return "Unknown";
+    return (data['username'] as String?) ?? "Unknown";
   }
 
   @override
@@ -33,38 +32,46 @@ class ChatListPage extends StatelessWidget {
             .where("participants", arrayContains: currentUser.uid)
             .snapshots(),
         builder: (context, snapshot) {
-          if (!snapshot.hasData) {
+          if (snapshot.connectionState != ConnectionState.active) {
             return const Center(child: CircularProgressIndicator());
           }
-          final chats = snapshot.data!.docs;
-          if (chats.isEmpty) {
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
             return const Center(child: Text("No chats yet"));
           }
+
+          final chats = snapshot.data!.docs;
           return ListView.builder(
             itemCount: chats.length,
             itemBuilder: (context, index) {
               final chatDoc = chats[index];
-              final data = chatDoc.data() as Map<String, dynamic>;
-              // Get the list of participants.
-              final List participants = data["participants"] ?? [];
-              // Determine the other user's ID.
-              final String otherUserId = participants.firstWhere(
-                  (id) => id != currentUser.uid,
-                  orElse: () => "Unknown");
-              final String lastMessage = data["lastMessage"] ?? "";
-              return FutureBuilder<DocumentSnapshot>(
-                future: FirebaseFirestore.instance
-                    .collection('users')
-                    .doc(otherUserId)
-                    .get(),
-                builder: (context, userSnapshot) {
-                  if (!userSnapshot.hasData) {
+              final chatData = chatDoc.data() as Map<String, dynamic>;
+
+              // Pull participants list safely
+              final rawList = chatData['participants'];
+              final participants = <String>[];
+              if (rawList is List) {
+                for (var id in rawList) {
+                  if (id is String) participants.add(id);
+                }
+              }
+
+              // Find the other user's UID
+              final otherUserId = participants.firstWhere(
+                (id) => id != currentUser.uid,
+                orElse: () => "",
+              );
+
+              final lastMessage = (chatData['lastMessage'] as String?) ?? "";
+
+              return FutureBuilder<String>(
+                future: _getUserName(otherUserId),
+                builder: (context, nameSnapshot) {
+                  // While fetching username
+                  if (nameSnapshot.connectionState != ConnectionState.done) {
                     return const ListTile(title: Text("Loading..."));
                   }
-                  final userData =
-                      userSnapshot.data!.data() as Map<String, dynamic>;
-                  final String otherUserName =
-                      userData['username'] ?? "Unknown";
+                  final otherUserName = nameSnapshot.data ?? "Unknown";
+
                   return ListTile(
                     title: Text(otherUserName),
                     subtitle: Text(lastMessage),
@@ -72,7 +79,7 @@ class ChatListPage extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => ChatPage(
+                          builder: (_) => ChatPage(
                             recipientId: otherUserId,
                             recipientName: otherUserName,
                           ),

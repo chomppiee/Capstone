@@ -154,11 +154,69 @@ class AllHighlightsPage extends StatelessWidget {
           bool isParticipating = participants.contains(currentUser.uid);
           int participantsCount = participants.length;
 
-          // Get attended users list and check if the user is already marked as attended.
+          // Get attended users list.
           List<dynamic> attendedUsers = data.containsKey('attendedUsers')
               ? List<dynamic>.from(data['attendedUsers'])
               : [];
           bool isAttended = attendedUsers.contains(currentUser.uid);
+
+          // Determine which badge or button to show.
+          late Widget statusBadge;
+          if (isAttended) {
+            statusBadge = Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.green.shade100,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Text(
+                "Attended",
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.green),
+              ),
+            );
+          } else if (isParticipating) {
+            statusBadge = Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade100,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text(
+                    "Participated",
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.blue),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                TextButton(
+                  onPressed: () async {
+                    await FirebaseFirestore.instance
+                        .collection('community_highlights')
+                        .doc(docId)
+                        .update({
+                      'participants': FieldValue.arrayRemove([currentUser.uid])
+                    });
+                    Navigator.pop(context);
+                  },
+                  child: const Text("Withdraw"),
+                ),
+              ],
+            );
+          } else {
+            statusBadge = ElevatedButton(
+              onPressed: () async {
+                await FirebaseFirestore.instance
+                    .collection('community_highlights')
+                    .doc(docId)
+                    .update({
+                  'participants': FieldValue.arrayUnion([currentUser.uid])
+                });
+                Navigator.pop(context);
+              },
+              child: const Text("Participate"),
+            );
+          }
 
           return Dialog(
             insetPadding: EdgeInsets.zero,
@@ -234,50 +292,11 @@ class AllHighlightsPage extends StatelessWidget {
                             style: const TextStyle(fontSize: 16),
                           ),
                           const SizedBox(height: 20),
-                          // Participation Section.
+                          // Participation/Attended badge row.
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              // Only allow participation if the user has not been marked as attended.
-                              if (!isAttended)
-                                ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: isParticipating ? Colors.grey : Colors.blue,
-                                  ),
-                                  onPressed: () async {
-                                    if (!isParticipating) {
-                                      await FirebaseFirestore.instance
-                                          .collection('community_highlights')
-                                          .doc(docId)
-                                          .update({
-                                        'participants': FieldValue.arrayUnion([currentUser.uid])
-                                      });
-                                    } else {
-                                      await FirebaseFirestore.instance
-                                          .collection('community_highlights')
-                                          .doc(docId)
-                                          .update({
-                                        'participants': FieldValue.arrayRemove([currentUser.uid])
-                                      });
-                                    }
-                                  },
-                                  child: Text(
-                                    isParticipating ? "Withdraw" : "Participate",
-                                    style: const TextStyle(color: Colors.white),
-                                  ),
-                                )
-                              else
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                  decoration: BoxDecoration(
-                                    color: Colors.green.shade100,
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: const Text(
-                                    "Attended",
-                                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.green),
-                                  ),
-                                ),
+                              statusBadge,
                               Text(
                                 "$participantsCount participants",
                                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
@@ -285,15 +304,13 @@ class AllHighlightsPage extends StatelessWidget {
                             ],
                           ),
                           const SizedBox(height: 12),
-                          // QR Button section: only visible if the user is participating and not already marked as attended.
+                          // QR Button section.
                           if (isParticipating && !isAttended)
                             Center(
                               child: ElevatedButton.icon(
                                 icon: const Icon(Icons.qr_code),
                                 label: const Text("Generate Attendance QR"),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.green,
-                                ),
+                                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                                 onPressed: () {
                                   final String uid = currentUser.uid;
                                   final Map<String, String> qrPayload = {"uid": uid, "eventId": docId};
@@ -314,11 +331,7 @@ class AllHighlightsPage extends StatelessWidget {
                                                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                                               ),
                                               const SizedBox(height: 16),
-                                              QrImageView(
-                                                data: qrData,
-                                                version: QrVersions.auto,
-                                                size: 200,
-                                              ),
+                                              QrImageView(data: qrData, version: QrVersions.auto, size: 200),
                                               const SizedBox(height: 16),
                                               const Text(
                                                 "Ask the admin to scan this QR code to mark your attendance.",
@@ -326,10 +339,7 @@ class AllHighlightsPage extends StatelessWidget {
                                                 style: TextStyle(fontSize: 14),
                                               ),
                                               const SizedBox(height: 20),
-                                              ElevatedButton(
-                                                onPressed: () => Navigator.pop(context),
-                                                child: const Text("Close"),
-                                              ),
+                                              ElevatedButton(onPressed: () => Navigator.pop(context), child: const Text("Close")),
                                             ],
                                           ),
                                         ),

@@ -9,10 +9,9 @@ import 'package:segregate1/Widgets/ProfilePage.dart';
 import 'package:segregate1/Widgets/PostDonationPage.dart';
 import 'package:segregate1/Widgets/NotificationPage.dart';
 import 'package:segregate1/Widgets/ChatListPage.dart';
-import 'package:segregate1/Widgets/EventPage.dart';
-import 'package:segregate1/Widgets/ForumPage.dart';
 import 'package:segregate1/Widgets/ApprovalRequestPage.dart';
 import 'package:segregate1/Widgets/PostRequestPage.dart';
+import 'PointsPage.dart';
 
 class DonationPage extends StatefulWidget {
   const DonationPage({super.key});
@@ -28,6 +27,7 @@ class _DonationPageState extends State<DonationPage> with TickerProviderStateMix
   String? _selectedImagePath;
   String? _selectedCategoryForDonation;
 
+  static const Color _primary = Colors.green;
   // List of categories
   final List<String> _categories = [
     'Adult Clothing',
@@ -172,12 +172,12 @@ class _DonationPageState extends State<DonationPage> with TickerProviderStateMix
       // AppBar with TabBar indicator.
       appBar: AppBar(
         title: const Text('Donations'),
-        backgroundColor: const Color.fromARGB(255, 235, 235, 235),
+        backgroundColor: _primary,
         bottom: TabBar(
           controller: _tabController,
-          labelColor: Colors.blue,
-          unselectedLabelColor: Colors.grey,
-          indicatorColor: Colors.blue,
+          labelColor: const Color.fromARGB(255, 255, 255, 255),
+          unselectedLabelColor: const Color.fromARGB(255, 222, 222, 222),
+          indicatorColor: const Color.fromARGB(255, 255, 255, 255),
           tabs: const [
             Tab(text: "Donations"),
             Tab(text: "Requests"),
@@ -220,25 +220,32 @@ class _DonationPageState extends State<DonationPage> with TickerProviderStateMix
       ),
       // Bottom Navigation Bar updated to match Dashboard.
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 1,
+        currentIndex: 1,                       // Donation is at index 1
         type: BottomNavigationBarType.fixed,
         selectedItemColor: Colors.green,
         unselectedItemColor: Colors.grey,
         onTap: (int index) {
           switch (index) {
             case 0:
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const DashboardPage()));
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const DashboardPage()),
+              );
               break;
             case 1:
-              break; // Already on Donation Page
+              // Already on DonationPage
+              break;
             case 2:
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const EventPage()));
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const PointsPage()),
+              );
               break;
             case 3:
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const ForumPage()));
-              break;
-            case 4:
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const ProfilePage()));
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const ProfilePage()),
+              );
               break;
           }
         },
@@ -257,7 +264,7 @@ class _DonationPageState extends State<DonationPage> with TickerProviderStateMix
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFF1E88E5),
+        backgroundColor:  _primary,
         onPressed: () {
           // Modal bottom sheet to choose between Post Donation and Post Request.
           showModalBottomSheet(

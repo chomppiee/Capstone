@@ -4,12 +4,12 @@ import 'package:segregate1/Widgets/AllHighlightsPage.dart';
 import 'package:segregate1/Widgets/ForumPage.dart';
 import 'package:segregate1/Widgets/ProfilePage.dart';
 import 'package:segregate1/Widgets/DonationPage.dart';
-import 'package:segregate1/Widgets/EventPage.dart';
 import 'package:segregate1/Widgets/AnnouncementsPage.dart';
 import 'package:segregate1/Widgets/SegregationGuidePage.dart';
 import 'package:segregate1/Widgets/PointsPage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+import 'package:segregate1/Widgets/BarangayShareCenterPage.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -138,39 +138,70 @@ class DashboardPage extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                _buildCategoryButton(
-                  context,
-                  icon: Icons.campaign, // Announcements icon
-                  label: 'Announcements',
-                  targetPage: const AnnouncementsPage(),
-                ),
-                _buildCategoryButton(
-                  context,
-                  icon: Icons.forum, // Forum icon
-                  label: 'Forum',
-                  targetPage: const ForumPage(),
-                ),
-              ],
-            ),
-            Row(
-              children: [
-                _buildCategoryButton(
-                  context,
-                  icon: Icons.recycling, // Recycling Tips icon
-                  label: 'Recycling Tips',
-                  targetPage: const SegregationGuidePage(),
-                ),
-                _buildCategoryButton(
-                  context,
-                  icon: Icons.calendar_month, // Community Calendar icon
-                  label: 'Community Calendar',
-                  targetPage: const AllHighlightsPage(),
-                ),
-              ],
-            ),
+           // 2) In your build(), replace the two Row(...) blocks for Categories with:
+
+const SizedBox(height: 8),
+
+// --- Row 1: two half-width buttons ---
+Row(
+  children: [
+    Expanded(
+      child: _buildCategoryButton(
+        context: context,
+        icon: Icons.campaign,
+        label: 'Announcements',
+        targetPage: const AnnouncementsPage(),
+      ),
+    ),
+    const SizedBox(width: 8),
+    Expanded(
+      child: _buildCategoryButton(
+        context: context,
+        icon: Icons.forum,
+        label: 'Forum',
+        targetPage: const ForumPage(),
+      ),
+    ),
+  ],
+),
+
+const SizedBox(height: 8),
+
+// --- Row 2: one full-width button ---
+_buildCategoryButton(
+  context: context,
+  icon: Icons.storefront,  
+  label: 'Barangay Share Center',
+  targetPage: const BarangayShareCenterPage(), // or your ShareCenterPage
+),
+
+const SizedBox(height: 8),
+
+// --- Row 3: two half-width buttons ---
+Row(
+  children: [
+    Expanded(
+      child: _buildCategoryButton(
+        context: context,
+        icon: Icons.recycling,
+        label: 'Recycling Tips',
+        targetPage: const SegregationGuidePage(),
+      ),
+    ),
+    const SizedBox(width: 8),
+    Expanded(
+      child: _buildCategoryButton(
+        context: context,
+        icon: Icons.event,
+        label: 'Community Events',
+        targetPage: const AllHighlightsPage(),
+      ),
+    ),
+  ],
+),
+
+const SizedBox(height: 16),
+
             // ---- CATEGORIES SECTION END ----
 
             const SizedBox(height: 16),
@@ -186,37 +217,36 @@ class DashboardPage extends StatelessWidget {
   }
 
   /// Helper method to build a single category button with the icon fixed to the left.
-  Widget _buildCategoryButton(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required Widget targetPage,
-  }) {
-    return Expanded(
-      child: Padding(
-        padding: const EdgeInsets.all(4.0),
-        child: ElevatedButton.icon(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.green,
-            foregroundColor: Colors.white,
-            minimumSize: const Size(double.infinity, 60),
-            alignment: Alignment.centerLeft, // Ensures the icon stays on the left
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-          icon: Icon(icon),
-          label: Text(label),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => targetPage),
-            );
-          },
-        ),
+  // 1) Updated helper: just the button
+Widget _buildCategoryButton({
+  required BuildContext context,
+  required IconData icon,
+  required String label,
+  required Widget targetPage,
+}) {
+  return ElevatedButton.icon(
+    onPressed: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => targetPage),
+      );
+    },
+    icon: Icon(icon, size: 20),
+    label: Text(label, style: const TextStyle(fontSize: 14)),
+    style: ElevatedButton.styleFrom(
+      minimumSize: const Size(double.infinity, 60),  // full-width when expanded
+      backgroundColor: Colors.green,
+      foregroundColor: Colors.white,
+      elevation: 0,
+      alignment: Alignment.centerLeft,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
       ),
-    );
-  }
+    ),
+  );
+}
+
 
   /// Section header for Community Highlights.
   Widget _buildSectionHeader(BuildContext context, String title, Widget page) {

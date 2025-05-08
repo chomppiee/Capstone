@@ -4,7 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:qr_code_scanner_plus/qr_code_scanner_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-
 class QRScannerPage extends StatefulWidget {
   const QRScannerPage({Key? key}) : super(key: key);
 
@@ -30,31 +29,44 @@ class _QRScannerPageState extends State<QRScannerPage> {
       _scanned = true;
 
       try {
+        // decode the QR payload
         final Map<String, dynamic> data = jsonDecode(scanData.code!);
-        final String uid = data['uid'];
-        final String eventId = data['eventId'];
+        final String uid     = data['uid'] as String;
+        final String eventId = data['eventId'] as String;
 
-        final userRef = FirebaseFirestore.instance.collection('users').doc(uid);
+        final userRef  = FirebaseFirestore.instance.collection('users').doc(uid);
         final eventRef = FirebaseFirestore.instance.collection('community_highlights').doc(eventId);
 
-        await FirebaseFirestore.instance.runTransaction((transaction) async {
-          final userSnap = await transaction.get(userRef);
-final userData = userSnap.data() as Map<String, dynamic>;
-final points = userData.containsKey('points') ? userData['points'] : 0;
-final events = userData.containsKey('events_attended') ? userData['events_attended'] : 0;
+        // transaction: update points/events for payload-UID & mark them attended
+        await FirebaseFirestore.instance.runTransaction((tx) async {
+          // fetch current values
+          final userSnap = await tx.get(userRef);
+          final userData = userSnap.data() as Map<String, dynamic>;
+          final points = (userData['points'] ?? 0) as int;
+          final events = (userData['events_attended'] ?? 0) as int;
 
-
-          transaction.update(userRef, {
+          // update user stats
+          tx.update(userRef, {
             'points': points + 10,
             'events_attended': events + 1,
           });
 
-          transaction.set(eventRef.collection('attendees').doc(uid), {
-            'attended': true,
-            'timestamp': FieldValue.serverTimestamp(),
+          // record in subcollection
+          tx.set(
+            eventRef.collection('attendees').doc(uid),
+            {
+              'attended': true,
+              'timestamp': FieldValue.serverTimestamp(),
+            },
+          );
+
+          // update the event doc's array
+          tx.update(eventRef, {
+            'attendedUsers': FieldValue.arrayUnion([uid]),
           });
         });
 
+        // success feedback
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text("✅ Attendance recorded!")),
@@ -71,34 +83,33 @@ final events = userData.containsKey('events_attended') ? userData['events_attend
       }
     });
   }
-  @override
-void initState() {
-  super.initState();
-  _checkCameraPermission();
-}
 
-Future<void> _checkCameraPermission() async {
-  var status = await Permission.camera.status;
-  if (!status.isGranted) {
-    status = await Permission.camera.request();
+  @override
+  void initState() {
+    super.initState();
+    _checkCameraPermission();
   }
 
-  if (status.isGranted) {
-    // Permission granted, scanner will work
-  } else {
-    if (mounted) {
+  Future<void> _checkCameraPermission() async {
+    var status = await Permission.camera.status;
+    if (!status.isGranted) {
+      status = await Permission.camera.request();
+    }
+    if (!status.isGranted && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Camera permission denied')),
       );
       Navigator.pop(context);
     }
   }
-}
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Scan Attendance QR"), backgroundColor: Colors.green),
+      appBar: AppBar(
+        title: const Text("Scan Attendance QR"),
+        backgroundColor: Colors.green,
+      ),
       body: Column(
         children: [
           Expanded(

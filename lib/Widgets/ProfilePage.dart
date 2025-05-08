@@ -3,11 +3,11 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:segregate1/Authentication/Loginpage.dart';
 import 'package:segregate1/Widgets/ChangePasswordPage.dart';
+import 'dart:async';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({Key? key}) : super(key: key);
@@ -103,42 +103,82 @@ class _ProfilePageState extends State<ProfilePage> {
     Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginPage()));
   }
 
-  Future<void> _deleteAccount() async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Delete Account'),
-        content: const Text(
-          'This will permanently delete your account and all your data. Are you sure?',
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete')),
-        ],
-      ),
-    );
+    Future<void> _deleteAccount() async {
+  int secondsRemaining = 7;
+  Timer? timer;
 
-    if (ok != true) return;
+  // Show the dialog and await its result (true = delete, false/cancel = abort)
+  final shouldDelete = await showDialog<bool>(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) {
+      return StatefulBuilder(
+        builder: (context, setState) {
+          // Start the countdown timer once when the dialog builds
+          timer ??= Timer.periodic(const Duration(seconds: 1), (t) {
+            if (secondsRemaining > 0) {
+              setState(() => secondsRemaining--);
+            } else {
+              t.cancel();
+            }
+          });
 
-    try {
-      // Optional: re-authentication may be required here
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(_auth.currentUser!.uid)
-          .delete();
-      await _auth.currentUser!.delete();
-
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => const LoginPage()),
-        (_) => false,
+          return AlertDialog(
+            title: const Text('Delete Account'),
+            content: const Text(
+              'This will permanently delete your account and all your data.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  timer?.cancel();
+                  Navigator.pop(context, false);
+                },
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                onPressed: secondsRemaining == 0
+                    ? () async {
+                        timer?.cancel();
+                        try {
+                          final uid = _auth.currentUser!.uid;
+                          await FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(uid)
+                              .delete();
+                          await _auth.currentUser!.delete();
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => const LoginPage()),
+                            (_) => false,
+                          );
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                                content: Text(
+                                    'Failed to delete account: $e')),
+                          );
+                          Navigator.pop(context, false);
+                        }
+                      }
+                    : null,
+                child: Text(
+                  secondsRemaining > 0
+                      ? 'Delete (${secondsRemaining})'
+                      : 'Delete',
+                ),
+              ),
+            ],
+          );
+        },
       );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to delete account: $e')),
-      );
+    },
+  );
     }
-  }
+
+
 
   void _showEditProfileDialog() {
     final fnCtrl = TextEditingController(text: fullName);

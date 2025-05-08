@@ -1,6 +1,14 @@
+// lib/Widgets/SegregationGuidePage.dart
+
 import 'package:flutter/material.dart';
-import 'package:segregate1/Widgets/WasteCategory/BiodegradableDetailPage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:segregate1/Widgets/WasteCategory/WasteItemDetailPage.dart';
+import 'package:segregate1/widgets/WasteCategory/WasteItemsListPage.dart';
 import 'package:segregate1/Widgets/RecyclingTipsPage.dart';
+import 'package:segregate1/Widgets/Dashboard.dart';
+import 'package:segregate1/Widgets/DonationPage.dart';
+import 'package:segregate1/Widgets/PointsPage.dart';
+import 'package:segregate1/Widgets/ProfilePage.dart';
 
 class SegregationGuidePage extends StatefulWidget {
   const SegregationGuidePage({super.key});
@@ -34,7 +42,15 @@ class _SegregationGuidePageState extends State<SegregationGuidePage> {
         padding: const EdgeInsets.all(16),
         child: ListView(
           children: [
+            // Search bar now opens the search delegate:
             TextField(
+              readOnly: true,
+              onTap: () {
+                showSearch(
+                  context: context,
+                  delegate: WasteItemSearchDelegate(),
+                );
+              },
               decoration: InputDecoration(
                 hintText: 'Search waste items...',
                 prefixIcon: const Icon(Icons.search),
@@ -59,7 +75,7 @@ class _SegregationGuidePageState extends State<SegregationGuidePage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const BiodegradableDetailPage(),
+                    builder: (_) => const WasteItemsListPage(category: 'Biodegradable'),
                   ),
                 );
               },
@@ -71,7 +87,12 @@ class _SegregationGuidePageState extends State<SegregationGuidePage> {
               Colors.blue.shade50,
               Colors.blue,
               onArrowPressed: () {
-                debugPrint("Non-Biodegradable tile clicked");
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const WasteItemsListPage(category: 'Non-Biodegradable'),
+                  ),
+                );
               },
             ),
             wasteCategoryTile(
@@ -81,7 +102,12 @@ class _SegregationGuidePageState extends State<SegregationGuidePage> {
               Colors.amber.shade50,
               Colors.amber.shade700,
               onArrowPressed: () {
-                debugPrint("Recyclable tile clicked");
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const WasteItemsListPage(category: 'Recyclable'),
+                  ),
+                );
               },
             ),
             wasteCategoryTile(
@@ -91,7 +117,12 @@ class _SegregationGuidePageState extends State<SegregationGuidePage> {
               Colors.red.shade50,
               Colors.red.shade700,
               onArrowPressed: () {
-                debugPrint("Hazardous tile clicked");
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const WasteItemsListPage(category: 'Hazardous'),
+                  ),
+                );
               },
             ),
             const SizedBox(height: 20),
@@ -157,13 +188,10 @@ class _SegregationGuidePageState extends State<SegregationGuidePage> {
                     alignment: Alignment.bottomRight,
                     child: TextButton(
                       onPressed: () {
-                        debugPrint("View more recycling tips clicked");
                         Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const RecyclingTipsPage(),
-                  ),
-                );
+                          context,
+                          MaterialPageRoute(builder: (_) => const RecyclingTipsPage()),
+                        );
                       },
                       child: const Text(
                         'View More',
@@ -178,14 +206,42 @@ class _SegregationGuidePageState extends State<SegregationGuidePage> {
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
+        currentIndex: 0,
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: Colors.black,
-        unselectedItemColor: Colors.black54,
+        selectedItemColor: Colors.green,
+        unselectedItemColor: Colors.grey,
+        onTap: (int index) {
+          switch (index) {
+            case 0:
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const DashboardPage()),
+              );
+              break;
+            case 1:
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const DonationPage()),
+              );
+              break;
+            case 2:
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const PointsPage()),
+              );
+              break;
+            case 3:
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const ProfilePage()),
+              );
+              break;
+          }
+        },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.card_giftcard), label: 'Reward'),
-          BottomNavigationBarItem(icon: Icon(Icons.forum), label: 'Forum'),
-          BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'Donate'),
+          BottomNavigationBarItem(icon: Icon(Icons.volunteer_activism), label: 'Donation'),
+          BottomNavigationBarItem(icon: Icon(Icons.stars), label: 'Points'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),
@@ -212,16 +268,79 @@ class _SegregationGuidePageState extends State<SegregationGuidePage> {
           title,
           style: TextStyle(fontWeight: FontWeight.bold, color: iconColor),
         ),
-        subtitle: Text(
-          subtitle,
-          style: const TextStyle(color: Colors.black54),
-        ),
+        subtitle: Text(subtitle, style: const TextStyle(color: Colors.black54)),
         trailing: IconButton(
           icon: const Icon(Icons.chevron_right, color: Colors.black38),
           onPressed: onArrowPressed,
         ),
         onTap: onArrowPressed,
       ),
+    );
+  }
+}
+
+// SearchDelegate to handle live Firestore search of waste items
+class WasteItemSearchDelegate extends SearchDelegate<void> {
+  @override
+  List<Widget>? buildActions(BuildContext context) => [
+        if (query.isNotEmpty)
+          IconButton(icon: const Icon(Icons.clear), onPressed: () => query = ''),
+      ];
+
+  @override
+  Widget? buildLeading(BuildContext context) =>
+      IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => close(context, null));
+
+  @override
+  Widget buildResults(BuildContext context) => _buildSearchResults(context);
+
+  @override
+  Widget buildSuggestions(BuildContext context) => _buildSearchResults(context);
+
+  Widget _buildSearchResults(BuildContext context) {
+    if (query.isEmpty) {
+      return const Center(child: Text('Type to search items'));
+    }
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('waste_items')
+          .where('name', isGreaterThanOrEqualTo: query)
+          .where('name', isLessThanOrEqualTo: query + '\uf8ff')
+          .snapshots(),
+      builder: (ctx, snap) {
+        if (snap.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final docs = snap.data?.docs ?? [];
+        if (docs.isEmpty) {
+          return const Center(child: Text('No items found'));
+        }
+        return ListView.builder(
+          itemCount: docs.length,
+          itemBuilder: (_, i) {
+            final data = docs[i].data()! as Map<String, dynamic>;
+            return ListTile(
+              title: Text(data['name']),
+              subtitle: Text(data['category'] ?? ''),
+              onTap: () {
+                close(context, null);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => WasteItemDetailPage(
+                      category: data['category'] ?? '',
+                      name: data['name'],
+                      description: data['description'],
+                      disposal: data['disposal'],
+                      tips: data['tips'] ?? '',
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
     );
   }
 }

@@ -1,0 +1,466 @@
+[
+    {
+      "name": "Banana Peel",
+      "category": "Biodegradable",
+      "description": "The soft outer layer of a banana, rich in potassium and other nutrients, that breaks down naturally when exposed to microorganisms in soil.",
+      "disposal": "Toss into your home compost bin or local green-waste collection. If neither is available, bury under a thin layer of soil to accelerate decomposition.",
+      "tips": "Cut into smaller pieces before composting to speed up the breakdown process and prevent matting."
+    },
+    {
+      "name": "Apple Core",
+      "category": "Biodegradable",
+      "description": "The central part of the apple fruit containing seeds and fibrous material, which readily decomposes under the right composting conditions.",
+      "disposal": "Add directly to your backyard compost pile or municipal organics bin. Avoid sending it to landfill where it will produce methane.",
+      "tips": "Chop into quarters to help it decompose more evenly and mix with dry leaves or paper to balance moisture."
+    },
+    {
+      "name": "Coffee Grounds",
+      "category": "Biodegradable",
+      "description": "Used grounds from brewed coffee; slightly acidic and high in nitrogen, making them an excellent addition to compost.",
+      "disposal": "Sprinkle into compost or use as a soil amendment in garden beds to improve structure and nutrient content.",
+      "tips": "Dry leftover grounds on a tray before composting to prevent clumping; they can also deter slugs when sprinkled around plants."
+    },
+    {
+      "name": "Plastic Bottle (PET)",
+      "category": "Recyclable",
+      "description": "Transparent, lightweight polyethylene terephthalate containers commonly used for water and soft drinks; fully recyclable in most curbside programs.",
+      "disposal": "Rinse out residue, remove caps and labels if required by your local facility, then place in the recyclables bin.",
+      "tips": "Crush or flatten bottles to save space, and keep caps on loosely to avoid losing them in recycling machinery."
+    },
+    {
+      "name": "Aluminum Can",
+      "category": "Recyclable",
+      "description": "Durable, lightweight beverage cans made from aluminum, which can be recycled indefinitely without loss of quality.",
+      "disposal": "Rinse out any liquid, then deposit into your metal recycling stream or container.",
+      "tips": "Crush cans flat to maximize bin capacity and prevent them from rolling out when transporting."
+    },
+    {
+      "name": "Glass Jar",
+      "category": "Recyclable",
+      "description": "Sturdy glass containers used for food storage (e.g., jams, sauces) that are highly reusable and recyclable.",
+      "disposal": "Remove lids and rinse thoroughly, then place in your glass recycling bin. Lids often go in the metal recycling stream.",
+      "tips": "Reuse jars for home storage before recycling—perfect for spices, seeds, or homemade preserves."
+    },
+    {
+      "name": "Styrofoam Cup",
+      "category": "Non-Biodegradable",
+      "description": "Lightweight, white expanded polystyrene cups used for hot and cold beverages; breaks into harmful microplastics and does not biodegrade.",
+      "disposal": "Check for a local drop-off that accepts EPS (expanded polystyrene) for densification and recycling; otherwise, it must go to general waste.",
+      "tips": "Switch to reusable or compostable cups to reduce reliance on Styrofoam altogether."
+    },
+    {
+      "name": "Used Battery (AA/AAA)",
+      "category": "Hazardous",
+      "description": "Household batteries contain heavy metals (e.g., cadmium, nickel) that can leach into soil and water if landfilled, posing environmental hazards.",
+      "disposal": "Take to a designated battery‐recycling or hazardous‐waste drop‐off point; do not place in regular trash or recycling bins.",
+      "tips": "Store spent batteries in a sealed, labeled container at home and drop off once full to minimize handling."
+    },
+    {
+      "name": "Eggshells",
+      "category": "Biodegradable",
+      "description": "Hard outer shell from eggs that is rich in calcium and breaks down in compost over time.",
+      "disposal": "Crush shells and add to your compost bin or garden soil to improve structure and nutrient content.",
+      "tips": "Rinse and bake shells before crushing to remove bacteria and make them more brittle for faster breakdown."
+    },
+    {
+      "name": "Grass Clippings",
+      "category": "Biodegradable",
+      "description": "Green plant material left over after mowing grass, high in moisture and nitrogen.",
+      "disposal": "Leave on lawn as mulch, add to compost if mixing with dry brown materials to avoid matting.",
+      "tips": "Use a mulching mower to finely chop clippings, helping them decompose quickly and return nutrients to soil."
+    },
+    {
+      "name": "Fallen Leaves",
+      "category": "Biodegradable",
+      "description": "Dry leaves shed by trees in autumn, composed of carbon-rich material ideal for composting.",
+      "disposal": "Collect and add to compost pile or use as mulch around garden plants to retain moisture and suppress weeds.",
+      "tips": "Shred leaves before composting to speed decomposition and prevent clumping into a solid layer."
+    },
+    {
+      "name": "Tea Bags",
+      "category": "Biodegradable",
+      "description": "Used tea leaves contained in porous bags; many are now compostable but check the tag for plastic content.",
+      "disposal": "Open and add leaves to compost; dispose of the bag (if plastic) in landfill or recycling per local guidelines.",
+      "tips": "Remove staple and string before composting; use dried leaves as garden mulch to repel pests."
+    },
+    {
+      "name": "Vegetable Scraps",
+      "category": "Biodegradable",
+      "description": "Peels, ends, and cores from vegetables which decompose quickly under proper composting conditions.",
+      "disposal": "Collect in a compost bin or organic waste collection. Avoid adding large woody stems to home compost.",
+      "tips": "Chop scraps into smaller pieces to accelerate breakdown and mix with dry material to balance moisture."
+    },
+    {
+      "name": "Paper Napkin",
+      "category": "Biodegradable",
+      "description": "Disposable paper tissues used during meals, typically absorbent and made from wood pulp.",
+      "disposal": "If lightly soiled with food, compost them. If heavily greasy or containing chemicals, discard in general waste.",
+      "tips": "Ensure napkins do not contain synthetic dyes or coatings before composting."
+    },
+    {
+      "name": "Flower Trimmings",
+      "category": "Biodegradable",
+      "description": "Dead or pruned parts of flowers and plants, including petals and stems, rich in organic matter.",
+      "disposal": "Add to compost or green-waste bin. Chop thicker stems to help them decompose faster.",
+      "tips": "Mix with other green and brown compostables to maintain air flow and moisture balance."
+    },
+    {
+      "name": "Peanut Shells",
+      "category": "Biodegradable",
+      "description": "Hard outer shells from peanuts which decompose slowly but are still organic.",
+      "disposal": "Crush and add to compost or use as mulch around plants to retain moisture and deter weeds.",
+      "tips": "Break into smaller pieces to speed composting and prevent long decay times."
+    },
+    {
+      "name": "Cardboard Box",
+      "category": "Recyclable",
+      "description": "Corrugated cardboard packaging commonly used for shipping and storage, made from cellulose fibers.",
+      "disposal": "Flatten and place in curbside recycling. Remove any tape or labels before recycling if possible.",
+      "tips": "Reuse boxes for storage or crafts before recycling to extend their lifespan."
+    },
+    {
+      "name": "Newspaper",
+      "category": "Recyclable",
+      "description": "Printed newsprint paper that is recyclable and made primarily from wood pulp.",
+      "disposal": "Place in paper recycling bin. Avoid mixing with glossy or coated papers.",
+      "tips": "Use old newspapers as weed barrier under mulch or for cleaning glass surfaces."
+    },
+    {
+      "name": "Steel Can",
+      "category": "Recyclable",
+      "description": "Metal cans used for foods like vegetables and soups, made from steel coated with tin to prevent corrosion.",
+      "disposal": "Rinse and place in metal recycling. Remove labels if required by local guidelines.",
+      "tips": "Crush the can to save space and ensure it is completely dry to avoid rust in recycling bins."
+    },
+    {
+      "name": "Aluminum Foil",
+      "category": "Recyclable",
+      "description": "Thin sheet of aluminum used for wrapping food; can be recycled if cleaned of food residue.",
+      "disposal": "Clean off any food scraps, roll into a ball at least 2 inches in diameter, then recycle with metals.",
+      "tips": "Collect small foil pieces in a single ball to prevent them from falling through recycling machinery."
+    },
+    {
+      "name": "Plastic #2 Container",
+      "category": "Recyclable",
+      "description": "Rigid high-density polyethylene (HDPE) used for milk jugs, detergent bottles, and juice containers.",
+      "disposal": "Rinse thoroughly and recycle in plastic stream. Replace caps loosely to ease separation during processing.",
+      "tips": "Check the recycle symbol and local guidelines, as some areas only accept specific plastic numbers."
+    },
+    {
+      "name": "Plastic #5 Container",
+      "category": "Recyclable",
+      "description": "Polypropylene containers found in yogurt cups and margarine tubs; recyclable in many but not all programs.",
+      "disposal": "Rinse and check local recycling rules for acceptance. If not accepted, repurpose or place in general waste.",
+      "tips": "Use these sturdy tubs for organizing small items at home before choosing to recycle."
+    },
+    {
+      "name": "Glass Bottle (Colored)",
+      "category": "Recyclable",
+      "description": "Green or brown glass bottles typically used for beer and wine; separated from clear glass in recycling.",
+      "disposal": "Rinse, remove caps, and sort by color into designated glass bins to ensure proper recycling.",
+      "tips": "Reuse as decorative vases or storage before recycling to maximize reuse."
+    },
+    {
+      "name": "Plastic Bag",
+      "category": "Non-Biodegradable",
+      "description": "Thin film bags made from polyethylene, commonly used for groceries; prone to tangling and wildlife hazards.",
+      "disposal": "Take to designated drop-off points at grocery stores for film plastic recycling; otherwise, place in trash.",
+      "tips": "Switch to reusable cloth bags to reduce single-use plastic consumption."
+    },
+    {
+      "name": "Plastic Straw",
+      "category": "Non-Biodegradable",
+      "description": "Narrow plastic tubes for drinking beverages; too small to be captured by most recycling equipment.",
+      "disposal": "Place in general waste. Consider switching to reusable or paper alternatives.",
+      "tips": "Carry a metal or silicone straw for personal use to avoid disposable straws altogether."
+    },
+    {
+      "name": "Cigarette Butt",
+      "category": "Non-Biodegradable",
+      "description": "Filters made from cellulose acetate that can take years to break down, leaching toxins into the environment.",
+      "disposal": "Dispose in a secure outdoor ashtray or trash can. Never discard on the ground.",
+      "tips": "Use a pocket ashtray when outdoors to contain butts for proper disposal later."
+    },
+    {
+      "name": "Disposable Diaper",
+      "category": "Non-Biodegradable",
+      "description": "Layered plastic and paper product that absorbs liquid; contains superabsorbent polymers and can take centuries to decompose.",
+      "disposal": "Seal in a plastic bag and discard in general waste. Do not flush or compost.",
+      "tips": "Consider biodegradable or cloth diaper options to reduce landfill waste."
+    },
+    {
+      "name": "Cotton Swab",
+      "category": "Non-Biodegradable",
+      "description": "Small sticks with cotton tips, often made with plastic stems; cotton may biodegrade but the stick remains in landfill.",
+      "disposal": "Trim off cotton tip and compost if unbleached; place stick in trash.",
+      "tips": "Switch to bamboo or paper-stem swabs that are fully compostable."
+    },
+    {
+      "name": "Disposable Razor",
+      "category": "Non-Biodegradable",
+      "description": "Razors made from a combination of plastic and metal blades, challenging to recycle in standard streams.",
+      "disposal": "Separate metal blade from handle if possible; recycle metal and discard plastic in trash.",
+      "tips": "Invest in a safety razor with replaceable blades and a metal handle for a long-term, low-waste option."
+    },
+    {
+      "name": "Paint Can",
+      "category": "Hazardous",
+      "description": "Containers holding leftover paint, which may contain solvents and heavy metals harmful to water and soil.",
+      "disposal": "Allow paint to fully dry out with kitty litter or commercial paint hardener, then take to hazardous waste facility.",
+      "tips": "Donate excess paint to community groups or use up smaller amounts on sample projects before disposal."
+    },
+    {
+      "name": "Motor Oil",
+      "category": "Hazardous",
+      "description": "Used engine oil contains heavy metals and toxic additives that can contaminate soil and waterways if poured down drains or onto the ground.",
+      "disposal": "Collect in a sealed, clearly labeled container and take to an automotive parts store or hazardous-waste drop-off facility.",
+      "tips": "Never mix with water or other fluids; keep it covered to prevent spills and volatilization."
+    },
+    {
+      "name": "Compact Fluorescent Lamp (CFL)",
+      "category": "Hazardous",
+      "description": "Energy-saving light bulbs that contain small amounts of mercury vapor; breakage releases mercury, which is harmful to health and environment.",
+      "disposal": "Return intact bulbs to a recycling center or retail drop-off that accepts mercury lamps; never throw in regular trash.",
+      "tips": "Store spent CFLs in a sturdy box to avoid breakage until you can take them to a proper facility."
+    },
+    {
+      "name": "Expired Medication",
+      "category": "Hazardous",
+      "description": "Packs or bottles of out-of-date pharmaceuticals, which can leach active compounds into water systems if flushed or landfilled.",
+      "disposal": "Bring to a pharmacy take-back program or community hazardous-waste event; do not flush or toss in household trash.",
+      "tips": "Keep all expired meds in their original containers and tape lids closed to prevent accidental ingestion."
+    },
+    {
+      "name": "Printer Toner Cartridge",
+      "category": "Hazardous",
+      "description": "Plastic cartridges filled with fine toner powder that can pose inhalation hazards and are not accepted in normal recycling bins.",
+      "disposal": "Return to manufacturer or office-supply store for free cartridge recycling or drop-off at an e-waste collection point.",
+      "tips": "Handle gently to avoid powder spills; many brands offer mail-back recycling kits."
+    },
+    {
+      "name": "Lithium-Ion Battery (Phone/Laptop)",
+      "category": "Hazardous",
+      "description": "Rechargeable batteries containing lithium that can ignite if damaged or improperly disposed; contain metals harmful to the environment.",
+      "disposal": "Take to an electronics retailer or specialized battery-recycling kiosk; do not place in curbside recycling or trash.",
+      "tips": "Tape over terminals and store in a fire-resistant container until drop-off."
+    },
+    {
+      "name": "Pesticide Container",
+      "category": "Hazardous",
+      "description": "Empty or partly used plastic jugs and bottles that held herbicides, insecticides, or fungicides; residues can be toxic to wildlife.",
+      "disposal": "Triple-rinse on site, add rinsate to your sprayer, then bring container to a household hazardous-waste facility.",
+      "tips": "Never reuse pesticide containers for any other purpose, and keep rinse water contained."
+    },
+    {
+      "name": "Bleach Bottle",
+      "category": "Hazardous",
+      "description": "Plastic containers that held bleach or other strong oxidizers; leftover chemical can corrode pipes and harm wastewater treatment.",
+      "disposal": "Rinse thoroughly, allow to air-dry, then recycle plastic per your municipality’s guidelines or take to hazardous-waste drop-off.",
+      "tips": "Wear gloves when rinsing and keep cap off so the container drains fully."
+    },
+    {
+      "name": "Cooking Oil",
+      "category": "Hazardous",
+      "description": "Used vegetable or animal fats that can clog drainage systems and attract pests if poured down the sink.",
+      "disposal": "Let cool, pour into a sealed, disposable container (e.g., an old carton) and place in general waste or take to a recycling center that accepts used cooking oil.",
+      "tips": "Filter out food particles and reuse oil when possible; store the disposal container upright in a cool place."
+    },
+    {
+      "name": "CD/DVD",
+      "category": "Non-Biodegradable",
+      "description": "Optical discs made from polycarbonate plastic coated with metal and lacquer; degrade very slowly in landfills.",
+      "disposal": "Take to an electronics recycling event or mail-back program; never put loose discs in the curbside bin where they can jam sorting equipment.",
+      "tips": "Repurpose scratched or obsolete discs as craft material or decorative art before recycling."
+    },
+    {
+      "name": "Synthetic Textile (Clothing)",
+      "category": "Non-Biodegradable",
+      "description": "Garments made from polyester, nylon, or acrylic that shed microplastics when washed and take centuries to break down.",
+      "disposal": "Donate wearable items; for worn-out fabrics, take to a textile-recycling drop-off or use as cleaning rags.",
+      "tips": "Check for local “clothing bank” bins to keep textiles out of landfill."
+    },
+    {
+      "name": "Rubber Tire",
+      "category": "Non-Biodegradable",
+      "description": "Vehicle tires composed of synthetic rubber and steel belts that resist natural degradation and can trap methane in landfills.",
+      "disposal": "Return to tire retailer for ‘take-back’ recycling or bring to a municipal solid-waste facility offering tire collection.",
+      "tips": "Many communities repurpose tires for playground surfaces or as garden planters—consider upcycling first."
+    },
+    {
+      "name": "Ceramic Plate",
+      "category": "Non-Biodegradable",
+      "description": "Dinnerware made from glazed clay; cannot be melted down or reshaped at typical glass-recycling facilities.",
+      "disposal": "Wrap broken pieces in newspaper and place in general waste; for whole items, consider donating if intact.",
+      "tips": "Use chipped plates as stepping stones in your garden or plant labels after gluing to stakes."
+    },
+    {
+      "name": "PVC Pipe",
+      "category": "Non-Biodegradable",
+      "description": "Rigid plastic piping used in plumbing; contains additives that make it difficult to recycle in standard plastic streams.",
+      "disposal": "Take clean, cut-to-length sections to a construction-and-demolition recycling center; otherwise, dispose of as bulky waste.",
+      "tips": "Reuse off-cuts for garden trellises or conduit for low-voltage wiring."
+    },
+    {
+      "name": "LCD Television",
+      "category": "Hazardous",
+      "description": "Flat-screen TVs contain mercury backlights and circuit boards with lead and other toxic metals.",
+      "disposal": "Take to an e-waste drop-off or electronics retailer with a recycling program; do not leave curbside.",
+      "tips": "Donate working units to schools or community centers before resorting to recycling."
+    },
+    {
+      "name": "Photographic Film",
+      "category": "Hazardous",
+      "description": "Traditional film negatives and prints contain silver halide crystals and chemical coatings harmful to water systems.",
+      "disposal": "Send to a specialty photo-lab recycling program or hazardous-waste facility; do not compost or trash loose.",
+      "tips": "Store film in a sealed plastic bag until you have enough to ship in bulk."
+    },
+    {
+      "name": "Aerosol Can",
+      "category": "Hazardous",
+      "description": "Pressurized spray containers that may contain flammable propellants and corrosive chemicals.",
+      "disposal": "Ensure can is empty (spray until hissing stops), then recycle metal body per local metal-recycling rules; full or partially full cans belong at hazardous-waste drop-off.",
+      "tips": "Puncture only at authorized facilities; never try to crush a full can yourself."
+    },
+    {
+      "name": "Nail Polish",
+      "category": "Hazardous",
+      "description": "Solvent-based cosmetic containing volatile organic compounds (VOCs) and resins that can pollute air and water.",
+      "disposal": "Let small amounts air-dry in a ventilated area, then discard the hardened residue in general waste; for larger volumes, take to chemical-waste collection.",
+      "tips": "Donate unopened bottles or swap with friends; use all polish in small craft projects to avoid disposal."
+    },
+    {
+      "name": "Mirror Glass",
+      "category": "Non-Biodegradable",
+      "description": "Reflective glass backed with silver or aluminum; cannot be recycled with standard container or window glass due to the reflective coating.",
+      "disposal": "Wrap in thick layers of paper or bubble wrap and place in general waste; check if your local scrap yard accepts mirror glass.",
+      "tips": "Reframe or repurpose old mirrors as decorative accents or craft supplies."
+    },
+    {
+      "name": "Disposable Surgical Mask",
+      "category": "Non-Biodegradable",
+      "description": "Single-use face mask made from polypropylene micro-fibers designed to filter droplets; not recyclable and can take decades to break down in landfill.",
+      "disposal": "Seal in a small plastic bag and discard in general waste; never flush masks or litter them outdoors.",
+      "tips": "Switch to reusable cloth masks when possible and wash regularly to reduce single-use waste."
+    },
+    {
+      "name": "Nitrile Glove",
+      "category": "Non-Biodegradable",
+      "description": "Single-use protective glove made from synthetic nitrile rubber; resists tears and chemicals but is not compostable.",
+      "disposal": "Place in general waste; if contaminated with biohazardous material, follow your local medical-waste protocol.",
+      "tips": "For non-medical tasks (e.g., cleaning), consider heavier reusable gloves to cut down on waste."
+    },
+    {
+      "name": "Medical Sharps (Needles)",
+      "category": "Hazardous",
+      "description": "Used syringes and needles pose puncture and infection risks; must be contained to protect handlers and the environment.",
+      "disposal": "Store in an approved sharps container and return to a pharmacy or hazardous-waste facility for safe destruction.",
+      "tips": "Never recap needles; seal containers when three-quarters full and label clearly “Sharps—Do Not Recycle.”"
+    },
+    {
+      "name": "Mercury Thermometer",
+      "category": "Hazardous",
+      "description": "Glass thermometer containing elemental mercury, a potent neurotoxin that vaporizes if the tube breaks.",
+      "disposal": "Take intact units to a hazardous-waste drop-off; never toss in regular trash or break open at home.",
+      "tips": "Replace with digital or alcohol-based thermometers to eliminate mercury risks."
+    },
+    {
+      "name": "Lead-Acid Car Battery",
+      "category": "Hazardous",
+      "description": "Automotive battery with lead plates and sulfuric acid electrolyte; extremely toxic and corrosive if leaked.",
+      "disposal": "Return to any auto parts retailer or battery-recycling center—they’ll accept and recycle it free of charge.",
+      "tips": "Keep upright and tape terminals; store in a leak-proof tray until disposal."
+    },
+    {
+      "name": "Printer Ink Cartridge",
+      "category": "Hazardous",
+      "description": "Plastic cartridge filled with solvent-based ink that may contain heavy metals and volatile organic compounds.",
+      "disposal": "Use manufacturer mail-back or office-supply store recycling programs; do not toss in curbside bins.",
+      "tips": "Opt for refillable ink systems or high-yield cartridges to reduce replacement frequency."
+    },
+    {
+      "name": "Polystyrene Packing Peanuts",
+      "category": "Non-Biodegradable",
+      "description": "Loose-fill foam packaging made from expanded polystyrene; lightweight and prone to scattering into waterways.",
+      "disposal": "Drop off at shipping stores offering foam recycling; otherwise seal in a bag and send to trash.",
+      "tips": "Collect and reuse for future shipments or donate to local mail-order businesses."
+    },
+    {
+      "name": "Candle Wax Residue",
+      "category": "Biodegradable",
+      "description": "Leftover paraffin or soy wax from burned candles; soy wax is compostable, but paraffin is petroleum-based.",
+      "disposal": "Skim cooled wax from jars: compost soy wax with green waste; discard paraffin in general trash.",
+      "tips": "Filter and remelt leftover wax to create new candles, mixing in wicks and fragrance as desired."
+    },
+    {
+      "name": "Cotton Bath Towel",
+      "category": "Biodegradable",
+      "description": "Thick absorbent towel made from 100% natural cotton fibers; fully compostable when cut into strips.",
+      "disposal": "Donate gently used towels; cut worn-out ones into rags or small pieces and add to backyard compost.",
+      "tips": "Use old towels as pet bedding or cleaning cloths before composting the scraps."
+    },
+    {
+      "name": "Cork Wine Stopper",
+      "category": "Biodegradable",
+      "description": "Stoppers made from harvested cork oak bark; natural, renewable, and compostable material.",
+      "disposal": "Drop off at cork-recycling points (often found in wine shops) or toss in home compost.",
+      "tips": "Repurpose as coasters, plant markers, or bulletin-board tacks before composting."
+    },
+    {
+      "name": "Leather Belt",
+      "category": "Biodegradable",
+      "description": "Accessory crafted from animal hide that, if untreated, will slowly break down in soil over time.",
+      "disposal": "Donate or sell if wearable; otherwise cut into small sections and compost untreated leather scraps.",
+      "tips": "Use durable leather offcuts for DIY projects like keychains or bracelets to extend their life."
+    },
+    {
+      "name": "Wool Sweater",
+      "category": "Biodegradable",
+      "description": "Garment knitted from sheep’s wool, a natural protein fiber that can biodegrade in controlled composting.",
+      "disposal": "Donate wearable sweaters; for damaged ones, cut into pieces and send to textile composting or recycling bins.",
+      "tips": "Moth-proof and repair holes to prolong life; small bits can be used as stuffing or insulation."
+    },
+    {
+      "name": "Oil-Based Paint",
+      "category": "Hazardous",
+      "description": "Solvent-based paint containing volatile organic compounds (VOCs) and heavy metals; flammable.",
+      "disposal": "Allow paint to harden fully (with cat litter or commercial hardener) then take cans to hazardous-waste collection.",
+      "tips": "Use water-based (latex) paints when possible and buy only what you’ll use to avoid leftovers."
+    },
+    {
+      "name": "Cosmetic Glass Jar",
+      "category": "Recyclable",
+      "description": "Small glass container for creams or balms; highly reusable and accepted by curbside glass recycling.",
+      "disposal": "Rinse out all residue, remove plastic lids, and sort glass into recycling; recycle lids separately per material.",
+      "tips": "Upcycle jars as spice holders, travel containers, or DIY candle vessels before recycling."
+    },
+    {
+      "name": "Shredded Paper",
+      "category": "Recyclable",
+      "description": "Finely cut paper from documents or packaging; must be bagged to prevent jamming sorting machinery.",
+      "disposal": "Place in a clear plastic bag and deposit in paper-recycling bins; do not mix loose with other recyclables.",
+      "tips": "Use as packing fill or compost as a brown material, balancing with nitrogen-rich scraps."
+    },
+    {
+      "name": "Wooden Furniture Offcuts",
+      "category": "Biodegradable",
+      "description": "Scraps of untreated wood from carpentry, ideal for mulch or compost when chipped or shredded.",
+      "disposal": "Chop into smaller pieces and add to compost heaps; larger offcuts can be turned into wood chips.",
+      "tips": "Donate usable offcuts to makerspaces or community workshops before composting."
+    },
+    {
+      "name": "Rice Husk",
+      "category": "Biodegradable",
+      "description": "Fibrous outer layer of rice grains removed during milling; high in silica and organic matter.",
+      "disposal": "Use as garden mulch or compost with green materials; can also be used in animal bedding.",
+      "tips": "Sift to remove dust before using as mulch to prevent respiratory irritation."
+    },
+    {
+      "name": "Tyvek Envelope",
+      "category": "Non-Biodegradable",
+      "description": "Light, tear-resistant envelope made from high-density polyethylene fibers; not accepted by curbside recycling.",
+      "disposal": "Take to specialized drop-off points for mailing supplies or discard in regular trash.",
+      "tips": "Reuse for shipping or document storage—carefully cut open to flatten and nest before disposal."
+    }
+  ]
+  
+  

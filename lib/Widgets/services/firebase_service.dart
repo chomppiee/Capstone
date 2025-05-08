@@ -45,6 +45,7 @@ Future<void> postDonation(
       'imageUrl': imageUrl,
       'userId': currentUser.uid,
       'username': username,
+      'approved': false,  
       'createdAt': FieldValue.serverTimestamp(),
     });
 
