@@ -32,15 +32,16 @@ class ApprovalRequestPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final currentUser = FirebaseAuth.instance.currentUser!;
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         appBar: AppBar(
           title: const Text("Approval/Request"),
           backgroundColor: Colors.blue,
           bottom: const TabBar(
             tabs: [
-              Tab(text: "Requests"),
+              Tab(text: "Donation Requests"),
               Tab(text: "Confirmations"),
+              Tab(text: "Request Approvals"),
             ],
           ),
         ),
@@ -168,82 +169,165 @@ class ApprovalRequestPage extends StatelessWidget {
                 );
               },
             ),
-            // Tab 2: Confirmations - show approval notifications for requesters.
-            StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('approvals')
-                  .where('receiverId', isEqualTo: currentUser.uid)
-                  .where('type', isEqualTo: 'donation_request_accepted')
-                  .orderBy('timestamp', descending: true)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (snapshot.hasError) {
-                  return Center(child: Text("Error: ${snapshot.error}"));
-                }
-                final approvals = snapshot.data?.docs;
-                if (approvals == null || approvals.isEmpty) {
-                  return const Center(child: Text("No confirmations"));
-                }
-                return ListView.builder(
-                  itemCount: approvals.length,
-                  itemBuilder: (context, index) {
-                    final approvalData = approvals[index].data() as Map<String, dynamic>;
-                    // Show the "Receive" button if not confirmed.
-                    final isConfirmed = approvalData['confirmed'] == true;
-                    return ListTile(
-                      title: Text(approvalData["message"] ?? "No message"),
-                      subtitle: approvalData["timestamp"] != null
-                          ? Text((approvalData["timestamp"] as Timestamp).toDate().toString())
-                          : null,
-                      trailing: isConfirmed
-                          ? const Text("Received", style: TextStyle(color: Colors.green))
-                          : ElevatedButton(
-                              onPressed: () async {
-                                try {
-                                  // When the requester taps "Receive," mark the donation as claimed.
-                                  await FirebaseFirestore.instance
-                                      .collection('donations')
-                                      .doc(approvalData['donationId'])
-                                      .update({'claimedBy': currentUser.uid});
-                                  // Update the approval document to mark it as confirmed.
-                                  await approvals[index].reference.update({
-                                    'confirmed': true,
-                                    'type': 'donation_request_confirmed'
-                                  });
-                                  // Update donor's points by incrementing by 10.
-                                  // The donor is the one who posted the donation.
-                                  DocumentSnapshot donationDoc = await FirebaseFirestore.instance
-                                      .collection('donations')
-                                      .doc(approvalData['donationId'])
-                                      .get();
-                                  if (donationDoc.exists) {
-                                    final donationData = donationDoc.data() as Map<String, dynamic>;
-                                    String donorId = donationData['userId'];
-                                    await FirebaseFirestore.instance
-                                        .collection('users')
-                                        .doc(donorId)
-                                        .update({'points': FieldValue.increment(10)});
-                                  }
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text("Donation confirmed. Points added.")),
-                                  );
-                                } catch (e) {
-                                  print("Error confirming donation: $e");
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text("Error confirming donation: $e")),
-                                  );
-                                }
-                              },
-                              child: const Text("Receive"),
-                            ),
-                    );
-                  },
-                );
-              },
-            ),
+// ─── Tab 2: Confirmations (both donation and request receipts) ───
+StreamBuilder<QuerySnapshot>(
+  stream: FirebaseFirestore.instance
+    .collection('approvals')
+    .where('receiverId', isEqualTo: FirebaseAuth.instance.currentUser!.uid)
+    .where('confirmed',  isEqualTo: false)
+    .where('type', whereIn: ['donation_request_accepted', 'request_fulfilled'])
+    .orderBy('timestamp', descending: true)
+    .snapshots(),
+  builder: (context, snapshot) {
+    if (snapshot.connectionState == ConnectionState.waiting) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (snapshot.hasError) {
+      return Center(child: Text('Error: ${snapshot.error}'));
+    }
+
+    // ← define docs here
+    final docs = snapshot.data?.docs ?? [];
+    if (docs.isEmpty) {
+      return const Center(child: Text('No confirmations'));
+    }
+
+    return ListView.builder(
+      itemCount: docs.length,
+      itemBuilder: (ctx, i) {
+        final approvalDoc  = docs[i];
+        final data         = approvalDoc.data() as Map<String, dynamic>;
+
+        // you can switch on data['type'] to customize text/buttons
+        final isDonation   = data['type'] == 'donation_request_accepted';
+        final buttonLabel  = isDonation ? 'Received' : 'Got it';
+        final messageText  = isDonation
+          ? 'Your donation request has been accepted!'
+          : data['message'] ?? 'Your request was fulfilled.';
+
+        return ListTile(
+          title: Text(messageText),
+          trailing: ElevatedButton(
+            child: Text(buttonLabel),
+            onPressed: () async {
+              // 1) for donations: update the donation doc
+              if (isDonation) {
+                await FirebaseFirestore.instance
+                  .collection('donations')
+                  .doc(data['donationId'])
+                  .update({'status': 'received'});
+              } else {
+                // 2) for requests: mark the request confirmed
+                await FirebaseFirestore.instance
+                  .collection('requests')
+                  .doc(data['requestId'])
+                  .update({'status': 'done'});
+              }
+
+              // 3) mark this approval doc confirmed
+              await approvalDoc.reference.update({
+                'confirmed': true,
+                'type': '${data['type']}_confirmed'
+              });
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Confirmation recorded.'))
+              );
+            },
+          ),
+        );
+      },
+    );
+  },
+),
+
+// ─── Tab 3: My Offers ───────────────────────────────────────────────
+StreamBuilder<QuerySnapshot>(
+  stream: FirebaseFirestore.instance
+      .collection('approvals')
+      .where('donorId',   isEqualTo: FirebaseAuth.instance.currentUser!.uid)
+      .where('type',      isEqualTo: 'request_approved')
+      .where('confirmed', isEqualTo: false)
+      .orderBy('timestamp', descending: true)
+      .snapshots(),
+  builder: (context, snapshot) {
+    // 1) state checks
+    if (snapshot.connectionState == ConnectionState.waiting) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (snapshot.hasError) {
+      return Center(child: Text('Error: ${snapshot.error}'));
+    }
+
+    // 2) define docs here!
+    final docs = snapshot.data?.docs ?? [];
+    if (docs.isEmpty) {
+      return const Center(child: Text('No pending offers'));
+    }
+
+    // 3) build list
+    return ListView.builder(
+      itemCount: docs.length,
+      itemBuilder: (ctx, i) {
+        final approvalDoc = docs[i];
+        final data        = approvalDoc.data() as Map<String, dynamic>;
+
+        return FutureBuilder<DocumentSnapshot>(
+          future: FirebaseFirestore.instance
+              .collection('requests')
+              .doc(data['requestId'])
+              .get(),
+          builder: (ctx2, reqSnap) {
+            if (reqSnap.connectionState == ConnectionState.waiting) {
+              return const SizedBox();
+            }
+            if (!reqSnap.hasData || !reqSnap.data!.exists) {
+              return const ListTile(title: Text('Request not found'));
+            }
+
+            final req = reqSnap.data!.data() as Map<String, dynamic>;
+            return ListTile(
+              title: Text(req['title'] ?? 'Unnamed Request'),
+              subtitle: Text('Requester: ${req['username'] ?? 'Unknown'}'),
+              trailing: ElevatedButton(
+                child: const Text('Accept'),
+                onPressed: () async {
+                  // a) mark the request done
+                  await FirebaseFirestore.instance
+                      .collection('requests')
+                      .doc(data['requestId'])
+                      .update({'status': 'done'});
+
+                  // b) mark this approval confirmed
+                  await approvalDoc.reference.update({'confirmed': true});
+
+                  // c) notify A that B has fulfilled
+                  await FirebaseFirestore.instance
+                      .collection('approvals')
+                      .add({
+                        'receiverId': req['userId'],          // A’s UID
+                        'requestId':  data['requestId'],
+                        'message':    'Your request for "${req['title']}" has been fulfilled. Please tap "Received" once you get it.',
+                        'timestamp':  FieldValue.serverTimestamp(),
+                        'type':       'request_fulfilled',
+                        'confirmed':  false,
+                      });
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Request fulfilled'))
+                  );
+                },
+              ),
+            );
+          },
+        );
+      },
+    );
+  },
+),
+
+
+
           ],
         ),
       ),

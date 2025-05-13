@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:segregate1/Widgets/CalendarPage.dart';
 
 class AllHighlightsPage extends StatelessWidget {
   const AllHighlightsPage({Key? key}) : super(key: key);
@@ -366,9 +367,20 @@ class AllHighlightsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Community Events"),
-        backgroundColor: Colors.green,
-      ),
+  title: const Text("Community Events"),
+  backgroundColor: Colors.green,
+  actions: [
+    IconButton(
+      icon: const Icon(Icons.calendar_today),
+      tooltip: 'View Calendar',
+      onPressed: () {
+  Navigator.of(context).push(
+    MaterialPageRoute(builder: (_) => const CalendarPage()),
+  );
+      },
+    ),
+  ],
+),
       body: _buildHighlightsList(context),
     );
   }

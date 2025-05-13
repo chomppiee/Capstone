@@ -168,12 +168,12 @@ Row(
 const SizedBox(height: 8),
 
 // --- Row 2: one full-width button ---
-_buildCategoryButton(
+/**_buildCategoryButton(
   context: context,
   icon: Icons.storefront,  
   label: 'Barangay Share Center',
   targetPage: const BarangayShareCenterPage(), // or your ShareCenterPage
-),
+),**/
 
 const SizedBox(height: 8),
 

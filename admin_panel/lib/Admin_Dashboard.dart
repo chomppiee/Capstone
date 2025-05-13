@@ -8,6 +8,8 @@ import 'package:admin_panel/users_page.dart';
 import 'package:admin_panel/AdminForumPage.dart';
 import 'package:admin_panel/DonationApprovalPage.dart';
 import 'package:admin_panel/redeem_items_page.dart';
+import 'package:admin_panel/BarangayShareCenterPage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 
 // ─── Data model for charts ──────────────────────────────────────────────
@@ -29,74 +31,120 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
   void _navigateTo(String section) => setState(() => _selectedSection = section);
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF6F7FB),
-      body: Row(
-        children: [
-          // ─── SIDEBAR ───────────────────────────────────────────────
-          Container(
-            width: 235,
-            color: const Color(0xFF263238),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 30),
-                Center(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Image.asset('assets/logo.png', height: 40, width: 40),
-                      const SizedBox(width: 8),
-                      const Text("SEGREGATE",
-                          style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w600)),
-                    ],
-                  ),
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    backgroundColor: const Color(0xFFF6F7FB),
+    body: Row(
+      children: [
+        // ─── SIDEBAR ───────────────────────────────────────────────
+        Container(
+          width: 235,
+          color: const Color(0xFF263238),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 30),
+              Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Image.asset('assets/logo.png', height: 40, width: 40),
+                    const SizedBox(width: 8),
+                    const Text(
+                      "SEGREGATE",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 30),
-                _navItem("Overview", Icons.dashboard),
-                _navItem("Users", Icons.people),
-                _navItem("Announcements", Icons.announcement),
-                _navItem("Community Highlights", Icons.star),
-                _navItem("Recycling Tips", Icons.recycling),
-                _navItem("Manage Forum", Icons.forum),
-                _navItem("Approve Donations", Icons.check_circle),
-                _navItem("Redeem Items", Icons.card_giftcard),
-              ],
-            ),
-          ),
+              ),
+              const SizedBox(height: 30),
 
-          // ─── MAIN CONTENT ───────────────────────────────────────────
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Title bar
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    boxShadow: [
-                      BoxShadow(blurRadius: 8, color: Colors.black.withOpacity(0.05), offset: const Offset(0, 4))
+              // — your nav items —
+              _navItem("Overview", Icons.dashboard),
+              _navItem("Users", Icons.people),
+              _navItem("Announcements", Icons.announcement),
+              _navItem("Community Highlights", Icons.star),
+              _navItem("Recycling Tips", Icons.recycling),
+           //   _navItem("Share Center", Icons.store),
+              _navItem("Manage Forum", Icons.forum),
+              _navItem("Approve Donations", Icons.check_circle),
+              _navItem("Redeem Items", Icons.card_giftcard),
+
+              const Spacer(),
+
+              // ─── LOGOUT BUTTON ────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: InkWell(
+                  onTap: () async {
+                    await FirebaseAuth.instance.signOut();
+                    Navigator.of(context).pushReplacementNamed('/login');
+                  },
+                  child: Row(
+                    children: const [
+                      Icon(Icons.logout, color: Colors.white),
+                      SizedBox(width: 12),
+                      Text(
+                        'Logout',
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
                     ],
                   ),
-                  child: const Text(
-                    "BARANGAY CANUMAY WEST",
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF263238)),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // ─── MAIN CONTENT ───────────────────────────────────────────
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Title bar
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      blurRadius: 8,
+                      color: Colors.black.withOpacity(0.05),
+                      offset: const Offset(0, 4),
+                    )
+                  ],
+                ),
+                child: const Text(
+                  "BARANGAY CANUMAY WEST",
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF263238),
                   ),
                 ),
-                const SizedBox(height: 20),
-                // Dynamic area
-                Expanded(child: Padding(padding: const EdgeInsets.all(20), child: _buildPageContent())),
-              ],
-            ),
+              ),
+              const SizedBox(height: 20),
+              // Dynamic area
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: _buildPageContent(),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
+
 
   Widget _navItem(String title, IconData icon) {
     final selected = _selectedSection == title;
@@ -241,6 +289,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
         return const CommunityHighlightsPage();
       case "Recycling Tips":
         return const AdminRecyclingPanel();
+      case "Share Center":                            // ← new
+        return const BarangayShareCenterPage();
       case "Manage Forum":
         return const AdminForumPage();
       case "Approve Donations":
