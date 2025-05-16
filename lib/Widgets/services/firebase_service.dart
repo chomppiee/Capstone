@@ -8,10 +8,9 @@ Future<void> postDonation(
   String title,
   String description,
   String imagePath,
-  String category, // New parameter for category
-  BuildContext context, {
-  String? pickupTime, // New optional parameter for available pickup time
-}) async {
+  String category,
+  BuildContext context,
+) async {
   if (title.isEmpty || description.isEmpty || imagePath.isEmpty) {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Please fill all fields')),
@@ -40,12 +39,12 @@ Future<void> postDonation(
     await FirebaseFirestore.instance.collection('donations').add({
       'title': title,
       'description': description,
-      'category': category, // Save the category
-      'pickupTime': pickupTime, // Save the pickup time (if provided)
+      'category': category,
       'imageUrl': imageUrl,
       'userId': currentUser.uid,
       'username': username,
-      'approved': false,  
+      'approved': false,
+      'status': 'pending', // ← New field
       'createdAt': FieldValue.serverTimestamp(),
     });
 
@@ -58,6 +57,7 @@ Future<void> postDonation(
     );
   }
 }
+
 
 Future<void> deleteDonation(String donationId) async {
   try {

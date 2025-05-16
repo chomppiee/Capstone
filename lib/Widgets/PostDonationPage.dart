@@ -13,12 +13,10 @@ class PostDonationPage extends StatefulWidget {
 class _PostDonationPageState extends State<PostDonationPage> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descController = TextEditingController();
-  final TextEditingController _pickupTimeController = TextEditingController();
 
   String? _selectedImagePath;
   String? _selectedCategory;
-
-  bool _isPosting = false; // ← loading flag
+  bool _isPosting = false;
 
   final List<String> _categories = [
     'Adult Clothing',
@@ -50,16 +48,9 @@ class _PostDonationPageState extends State<PostDonationPage> {
   ];
 
   @override
-  void initState() {
-    super.initState();
-    print("Categories: $_categories");
-  }
-
-  @override
   void dispose() {
     _titleController.dispose();
     _descController.dispose();
-    _pickupTimeController.dispose();
     super.dispose();
   }
 
@@ -68,45 +59,6 @@ class _PostDonationPageState extends State<PostDonationPage> {
     if (path != null) {
       setState(() => _selectedImagePath = path);
     }
-  }
-
-  Future<void> _selectTimeRange() async {
-    TimeOfDay? startTime = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-      helpText: 'Select Pickup Start Time',
-      builder: (context, child) => Theme(
-        data: Theme.of(context).copyWith(
-          timePickerTheme: const TimePickerThemeData(
-            helpTextStyle:
-                TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.blue),
-          ),
-        ),
-        child: child!,
-      ),
-    );
-    if (startTime == null) return;
-
-    TimeOfDay? endTime = await showTimePicker(
-      context: context,
-      initialTime: startTime,
-      helpText: 'Select Pickup End Time',
-      builder: (context, child) => Theme(
-        data: Theme.of(context).copyWith(
-          timePickerTheme: const TimePickerThemeData(
-            helpTextStyle:
-                TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.blue),
-          ),
-        ),
-        child: child!,
-      ),
-    );
-    if (endTime == null) return;
-
-    setState(() {
-      _pickupTimeController.text =
-          "${startTime.format(context)} - ${endTime.format(context)}";
-    });
   }
 
   void _showLoadingDialog() {
@@ -134,24 +86,16 @@ class _PostDonationPageState extends State<PostDonationPage> {
     if (_titleController.text.isEmpty ||
         _descController.text.isEmpty ||
         _selectedImagePath == null ||
-        _selectedCategory == null ||
-        _pickupTimeController.text.isEmpty) {
+        _selectedCategory == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Please fill all fields, select an image, choose a category, and select available pickup time',
-          ),
-        ),
+        const SnackBar(content: Text('Please fill all fields and select an image and category')),
       );
       return;
     }
 
-    if (_isPosting) return; // already in progress
+    if (_isPosting) return;
 
-    setState(() {
-      _isPosting = true;
-    });
-
+    setState(() => _isPosting = true);
     _showLoadingDialog();
 
     await postDonation(
@@ -160,17 +104,14 @@ class _PostDonationPageState extends State<PostDonationPage> {
       _selectedImagePath!,
       _selectedCategory!,
       context,
-      pickupTime: _pickupTimeController.text,
     );
 
     if (mounted) {
-      Navigator.pop(context); // close loading dialog
-      Navigator.pop(context); // go back
+      Navigator.pop(context); // close loading
+      Navigator.pop(context); // return to previous
     }
 
-    setState(() {
-      _isPosting = false;
-    });
+    setState(() => _isPosting = false);
   }
 
   @override
@@ -236,34 +177,21 @@ class _PostDonationPageState extends State<PostDonationPage> {
               }).toList(),
               onChanged: (v) => setState(() => _selectedCategory = v),
             ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _pickupTimeController,
-              readOnly: true,
-              decoration: const InputDecoration(
-                labelText: 'Available Pickup Time',
-                hintText: 'Select available pickup time',
-                border: OutlineInputBorder(),
-                suffixIcon: Icon(Icons.access_time),
-              ),
-              onTap: _selectTimeRange,
-            ),
             const SizedBox(height: 20),
             ElevatedButton(
-  onPressed: _isPosting ? null : _submitDonation,
-  style: ElevatedButton.styleFrom(
-    backgroundColor: const Color(0xFF1E88E5),
-    padding: const EdgeInsets.symmetric(vertical: 14),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(8),
-    ),
-  ),
-  child: const Text(
-    'POST',
-    style: TextStyle(color: Colors.white, fontSize: 16),
-  ),
-),
-
+              onPressed: _isPosting ? null : _submitDonation,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1E88E5),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                'POST',
+                style: TextStyle(color: Colors.white, fontSize: 16),
+              ),
+            ),
           ],
         ),
       ),

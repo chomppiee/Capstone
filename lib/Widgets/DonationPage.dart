@@ -11,6 +11,7 @@ import 'package:segregate1/Widgets/NotificationPage.dart';
 import 'package:segregate1/Widgets/ChatListPage.dart';
 import 'package:segregate1/Widgets/ApprovalRequestPage.dart';
 import 'package:segregate1/Widgets/PostRequestPage.dart';
+import 'package:segregate1/Widgets/InventoryList.dart'; 
 import 'PointsPage.dart';
 
 class DonationPage extends StatefulWidget {
@@ -28,6 +29,7 @@ class _DonationPageState extends State<DonationPage> with TickerProviderStateMix
   String? _selectedCategoryForDonation;
 
   static const Color _primary = Colors.green;
+  
   // List of categories
   final List<String> _categories = [
     'Adult Clothing',
@@ -61,7 +63,7 @@ class _DonationPageState extends State<DonationPage> with TickerProviderStateMix
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
@@ -181,6 +183,12 @@ class _DonationPageState extends State<DonationPage> with TickerProviderStateMix
           tabs: const [
             Tab(text: "Donations"),
             Tab(text: "Requests"),
+            Tab(
+          child: Text(
+            "Barangay Inventory",
+            style: const TextStyle(fontSize: 12),
+             ),
+        ),
           ],
         ),
         actions: [
@@ -261,6 +269,7 @@ class _DonationPageState extends State<DonationPage> with TickerProviderStateMix
         children: const [
           DonationList(), // Displays donation list with donation details functionality.
           RequestList(),  // Displays request posts (from PostRequestPage) in grid view.
+          InventoryList(),
         ],
       ),
       floatingActionButton: FloatingActionButton(

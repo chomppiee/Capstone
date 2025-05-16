@@ -1,3 +1,4 @@
+import 'package:admin_panel/AdminInventoryList.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
@@ -73,6 +74,7 @@ Widget build(BuildContext context) {
            //   _navItem("Share Center", Icons.store),
               _navItem("Manage Forum", Icons.forum),
               _navItem("Approve Donations", Icons.check_circle),
+               _navItem("Inventory", Icons.inventory), 
               _navItem("Redeem Items", Icons.card_giftcard),
 
               const Spacer(),
@@ -295,6 +297,8 @@ Widget build(BuildContext context) {
         return const AdminForumPage();
       case "Approve Donations":
         return const DonationApprovalPage();
+      case "Inventory":                              // ← NEW
+        return const AdminInventoryList();
       case "Redeem Items":
         return const RedeemItemsPage();
       default:

@@ -1,6 +1,9 @@
+// lib/Widgets/DonationDetailsPage.dart
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:segregate1/Widgets/services/firebase_service.dart';
 import 'package:segregate1/Widgets/Chatpage.dart';
 
@@ -42,22 +45,20 @@ class DonationDetailsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Retrieve category from donation; if missing, use a default value.
+    final currentUser = FirebaseAuth.instance.currentUser;
+    final bool isOwner = donation['userId'] == currentUser?.uid;
+    final bool isClaimed = donation.containsKey('claimedBy');
+
     final String category = (donation['category'] != null &&
             donation['category'].toString().isNotEmpty)
         ? donation['category']
         : 'No Category';
 
-    // Retrieve pickup time from donation; default to "Not provided".
-    final String pickupTime = donation['pickupTime'] ?? 'Not provided';
-
-    final currentUser = FirebaseAuth.instance.currentUser;
-    final bool isOwner = donation['userId'] == currentUser?.uid;
-    final bool isClaimed = donation.containsKey('claimedBy');
+    final String status = donation['status'] ?? 'Pending';
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1E88E5),
+        backgroundColor: const Color.fromARGB(255, 31, 196, 9),
         title: Text(donation['title'] ?? 'Donation Details'),
       ),
       body: SingleChildScrollView(
@@ -65,7 +66,7 @@ class DonationDetailsPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Full image using Hero animation and 60% of screen height.
+            // Image
             Hero(
               tag: 'donationImage-$donationId',
               child: Image.network(
@@ -73,12 +74,13 @@ class DonationDetailsPage extends StatelessWidget {
                 height: MediaQuery.of(context).size.height * 0.6,
                 width: double.infinity,
                 fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) =>
+                errorBuilder: (ctx, err, st) =>
                     const Icon(Icons.broken_image, size: 60),
               ),
             ),
             const SizedBox(height: 15),
-            // Title and Category Row.
+
+            // Title & Category
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
@@ -94,24 +96,23 @@ class DonationDetailsPage extends StatelessWidget {
                   ),
                   Container(
                     margin: const EdgeInsets.only(left: 8),
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.blue.shade100,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       category,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: Colors.blue,
-                      ),
+                      style: const TextStyle(fontSize: 16, color: Colors.blue),
                     ),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 15),
-            // Description.
+
+            // Description
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Text(
@@ -120,25 +121,33 @@ class DonationDetailsPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 15),
-            // Pickup Time Details.
+
+            // Status (replaces pickup time)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Text(
-                'Available Pickup Time: $pickupTime',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.black87),
+                'Status: $status',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black87,
+                ),
               ),
             ),
             const SizedBox(height: 20),
-            // Buttons Section.
+
+            // Action Buttons
             if (!isOwner && !isClaimed)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: ElevatedButton(
                   onPressed: () async {
-                    final currentUser = FirebaseAuth.instance.currentUser;
-                    await FirebaseFirestore.instance.collection('donationRequests').add({
-                      'senderId': currentUser!.uid,
-                      'receiverId': donation['userId'], // donation owner
+                    final user = FirebaseAuth.instance.currentUser!;
+                    await FirebaseFirestore.instance
+                        .collection('donationRequests')
+                        .add({
+                      'senderId': user.uid,
+                      'receiverId': donation['userId'],
                       'donationId': donationId,
                       'status': 'pending',
                       'timestamp': FieldValue.serverTimestamp(),
@@ -149,35 +158,55 @@ class DonationDetailsPage extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => ChatPage(
+                        builder: (_) => ChatPage(
                           recipientId: donation['userId'],
                           recipientName: donation['username'] ?? 'User',
                         ),
                       ),
                     );
                   },
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                  child: const Text('Message', style: TextStyle(color: Colors.white)),
+                  style:
+                      ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                  child: const Text('Message',
+                      style: TextStyle(color: Colors.white)),
                 ),
               ),
             if (isClaimed)
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 20),
-                child: Center(
-                  child: Text(
-                    'This donation has already been claimed.',
-                    style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-                  ),
+                child: Text(
+                  'This donation has already been claimed.',
+                  style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
                 ),
               ),
             if (isOwner)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: ElevatedButton(
-                  onPressed: () => _showDeleteConfirmation(context, donationId),
+                  onPressed: () =>
+                      _showDeleteConfirmation(context, donationId),
                   child: const Text('Delete'),
                 ),
               ),
+
+            // QR code only visible to owner once approved
+            if (isOwner && status == 'Approved' && donation['qrData'] != null) ...[
+              const SizedBox(height: 30),
+              Center(
+                child: Text(
+                  'Your Drop-off QR Code:',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Center(
+                child: QrImageView(
+                  data: donation['qrData'] as String,
+                  size: 200.0,
+                ),
+              ),
+            ],
+
             const SizedBox(height: 20),
           ],
         ),

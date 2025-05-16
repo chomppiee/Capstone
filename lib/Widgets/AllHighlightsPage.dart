@@ -4,17 +4,45 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import 'package:segregate1/Widgets/CalendarPage.dart';
 
-class AllHighlightsPage extends StatelessWidget {
+class AllHighlightsPage extends StatefulWidget {
   const AllHighlightsPage({Key? key}) : super(key: key);
+
+  @override
+  State<AllHighlightsPage> createState() => _AllHighlightsPageState();
+}
+
+class _AllHighlightsPageState extends State<AllHighlightsPage> {
+    bool _isAscending = true;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Community Events"),
+        backgroundColor: Colors.green,
+        actions: [
+          IconButton(
+            icon: Icon(_isAscending ? Icons.arrow_downward : Icons.arrow_upward),
+            tooltip: _isAscending ? 'Sort Descending' : 'Sort Ascending',
+            onPressed: () {
+              setState(() {
+                _isAscending = !_isAscending;  // toggle when icon pressed
+              });
+            },
+          ),
+        ],
+      ),
+      body: _buildHighlightsList(context),
+    );
+  }
 
   // Build list view for community highlights.
   Widget _buildHighlightsList(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('community_highlights')
-          .orderBy('timestamp', descending: true)
+          .orderBy('date_time', descending: !_isAscending) 
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -38,12 +66,14 @@ class AllHighlightsPage extends StatelessWidget {
             // Extract date/time from the document.
             String dateStr = '';
             String timeStr = '';
+            bool isPast = false;
             if (highlight.containsKey('date_time') &&
                 highlight['date_time'] != null) {
               final Timestamp ts = highlight['date_time'] as Timestamp;
               final DateTime dt = ts.toDate();
               dateStr = DateFormat('EEE, MMM d').format(dt);
               timeStr = DateFormat('hh:mm a').format(dt);
+              final bool isPast = dt.isBefore(DateTime.now());
             }
             return GestureDetector(
               onTap: () => _showHighlightDetails(context, docId),
@@ -58,22 +88,48 @@ class AllHighlightsPage extends StatelessWidget {
                   children: [
                     // Event image.
                     ClipRRect(
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                      child: imageUrl != null && imageUrl.toString().isNotEmpty
-                          ? Image.network(
-                              imageUrl,
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              height: 200,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const Center(child: Icon(Icons.broken_image, size: 60)),
-                            )
-                          : Container(
-                              height: 200,
-                              color: Colors.grey[300],
-                              child: const Center(child: Icon(Icons.image, size: 50, color: Colors.grey)),
-                            ),
-                    ),
+  borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+  child: Stack(
+    children: [
+      // Background event image
+      imageUrl != null && imageUrl.toString().isNotEmpty
+          ? Image.network(
+              imageUrl,
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: 200,
+              errorBuilder: (context, error, stackTrace) =>
+                  const Center(child: Icon(Icons.broken_image, size: 60)),
+            )
+          : Container(
+              height: 200,
+              color: Colors.grey[300],
+              child: const Center(child: Icon(Icons.image, size: 50, color: Colors.grey)),
+            ),
+
+      // ✅ DONE badge if date has passed
+      if (highlight.containsKey('date_time') &&
+          highlight['date_time'] != null &&
+          (highlight['date_time'] as Timestamp).toDate().isBefore(DateTime.now()))
+        Positioned(
+          top: 10,
+          right: 10,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.7),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Text(
+              "DONE",
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ),
+    ],
+  ),
+),
+
                     // Title container.
                     Padding(
                       padding: const EdgeInsets.all(8.0),
@@ -360,28 +416,6 @@ class AllHighlightsPage extends StatelessWidget {
           );
         },
       ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-  title: const Text("Community Events"),
-  backgroundColor: Colors.green,
-  actions: [
-    IconButton(
-      icon: const Icon(Icons.calendar_today),
-      tooltip: 'View Calendar',
-      onPressed: () {
-  Navigator.of(context).push(
-    MaterialPageRoute(builder: (_) => const CalendarPage()),
-  );
-      },
-    ),
-  ],
-),
-      body: _buildHighlightsList(context),
     );
   }
 }

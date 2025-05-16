@@ -2,7 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:segregate1/Authentication/QRScannerPage.dart';
-import 'package:segregate1/Authentication/RedeemScannerPage.dart';  // <-- new import
+import 'package:segregate1/Authentication/ReceiveScannerPage.dart';  // <-- new import
+import 'package:segregate1/Authentication/RedeemScannerPage.dart';
 
 class AdminPage extends StatelessWidget {
   const AdminPage({Key? key}) : super(key: key);
@@ -14,9 +15,10 @@ class AdminPage extends StatelessWidget {
     );
   }
 
-  void _navigateToUsePoints(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Navigating to Use Points...")),
+  void _navigateToReceiveDropoff(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const ReceiveScannerPage()),
     );
   }
 
@@ -30,7 +32,10 @@ class AdminPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Admin Dashboard"), backgroundColor: Colors.red),
+      appBar: AppBar(
+        title: const Text("Admin Dashboard"),
+        backgroundColor: Colors.red,
+      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -41,8 +46,8 @@ class AdminPage extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: () => _navigateToUsePoints(context),
-              child: const Text("Use Points"),
+              onPressed: () => _navigateToReceiveDropoff(context),
+              child: const Text("Scan Drop-off QR"),
             ),
             const SizedBox(height: 20),
             ElevatedButton(

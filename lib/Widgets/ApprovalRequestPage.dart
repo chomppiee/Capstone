@@ -210,30 +210,38 @@ StreamBuilder<QuerySnapshot>(
           trailing: ElevatedButton(
             child: Text(buttonLabel),
             onPressed: () async {
-              // 1) for donations: update the donation doc
-              if (isDonation) {
-                await FirebaseFirestore.instance
-                  .collection('donations')
-                  .doc(data['donationId'])
-                  .update({'status': 'received'});
-              } else {
-                // 2) for requests: mark the request confirmed
-                await FirebaseFirestore.instance
-                  .collection('requests')
-                  .doc(data['requestId'])
-                  .update({'status': 'done'});
-              }
+  final uid = FirebaseAuth.instance.currentUser!.uid;
 
-              // 3) mark this approval doc confirmed
-              await approvalDoc.reference.update({
-                'confirmed': true,
-                'type': '${data['type']}_confirmed'
-              });
+  // 1) Update the donation or request status
+  if (isDonation) {
+    await FirebaseFirestore.instance
+      .collection('donations')
+      .doc(data['donationId'])
+      .update({'status': 'received'});
+  } else {
+    await FirebaseFirestore.instance
+      .collection('requests')
+      .doc(data['requestId'])
+      .update({'status': 'done'});
+  }
 
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Confirmation recorded.'))
-              );
-            },
+  // 2) Increment the current user's points by 10
+  await FirebaseFirestore.instance
+    .collection('users')
+    .doc(uid)
+    .update({'points': FieldValue.increment(10)});
+
+  // 3) Mark the approval doc as confirmed
+  await approvalDoc.reference.update({
+    'confirmed': true,
+    'type': '${data['type']}_confirmed'
+  });
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text('+10 points awarded!'))
+  );
+},
+
           ),
         );
       },
