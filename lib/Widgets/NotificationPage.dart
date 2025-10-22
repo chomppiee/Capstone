@@ -54,12 +54,19 @@ class NotificationPage extends StatelessWidget {
               final Timestamp? ts = data['timestamp'] as Timestamp?;
 
               return ListTile(
-                leading: Icon(
-                  type == 'donationApproved'
-                      ? Icons.check_circle
-                      : Icons.notifications,
-                  color: read ? Colors.grey : Colors.blueAccent,
-                ),
+                  leading: Icon(
+  type == 'donationApproved'
+      ? Icons.check_circle
+      : type == 'donationDeclined'
+          ? Icons.cancel
+          : Icons.notifications,
+  color: type == 'donationApproved'
+      ? Colors.green
+      : type == 'donationDeclined'
+          ? Colors.red
+          : Colors.grey,
+),
+
                 title: Text(message),
                 subtitle: ts != null ? Text(_formatTimestamp(ts)) : null,
                 tileColor: read ? null : Colors.blue.withOpacity(0.1),

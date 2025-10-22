@@ -64,9 +64,21 @@ class _ChatPageState extends State<ChatPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.recipientName),
-        backgroundColor: Colors.blue,
+  title: Text(widget.recipientName),
+  backgroundColor: Colors.blue,
+  actions: [
+    IconButton(
+      icon: const Icon(
+        Icons.support_agent,
+        color: Colors.white,    // ← force it to white
       ),
+      tooltip: 'Chat with Admin',
+      onPressed: () {
+        // ...
+      },
+    ),
+  ],
+),
       body: Column(
         children: [
           // Chat messages list.

@@ -67,7 +67,7 @@ Widget build(BuildContext context) {
 
               // — your nav items —
               _navItem("Overview", Icons.dashboard),
-              _navItem("Users", Icons.people),
+             // _navItem("Users", Icons.people),
               _navItem("Announcements", Icons.announcement),
               _navItem("Community Highlights", Icons.star),
               _navItem("Recycling Tips", Icons.recycling),
@@ -80,25 +80,48 @@ Widget build(BuildContext context) {
               const Spacer(),
 
               // ─── LOGOUT BUTTON ────────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: InkWell(
-                  onTap: () async {
-                    await FirebaseAuth.instance.signOut();
-                    Navigator.of(context).pushReplacementNamed('/login');
-                  },
-                  child: Row(
-                    children: const [
-                      Icon(Icons.logout, color: Colors.white),
-                      SizedBox(width: 12),
-                      Text(
-                        'Logout',
-                        style: TextStyle(color: Colors.white, fontSize: 16),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+         Padding(
+  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+  child: InkWell(
+    onTap: () async {
+      final shouldLogout = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Log out?'),
+          content: const Text('You will be returned to the login screen.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: const Text('Log out'),
+            ),
+          ],
+        ),
+      ) ?? false;
+
+      if (!shouldLogout) return;
+
+      await FirebaseAuth.instance.signOut();
+      if (!context.mounted) return;
+
+      // Clear stack and go to login
+      Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+    },
+    child: Row(
+      children: const [
+        Icon(Icons.logout, color: Colors.white),
+        SizedBox(width: 12),
+        Text(
+          'Logout',
+          style: TextStyle(color: Colors.white, fontSize: 16),
+        ),
+      ],
+    ),
+  ),
+)
             ],
           ),
         ),
@@ -153,13 +176,13 @@ Widget build(BuildContext context) {
     return InkWell(
       onTap: () => _navigateTo(title),
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
         decoration: selected
             ? BoxDecoration(color: Colors.blueGrey.shade700, borderRadius: BorderRadius.circular(8))
             : null,
         child: ListTile(
           leading: Icon(icon, color: Colors.white),
-          title: Text(title, style: const TextStyle(color: Colors.white, fontSize: 16)),
+          title: Text(title, style: const TextStyle(color: Colors.white, fontSize: 14)),
         ),
       ),
     );

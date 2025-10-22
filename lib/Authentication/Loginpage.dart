@@ -4,6 +4,13 @@ import 'package:segregate1/Authentication/Forgotpass.dart';
 import 'package:segregate1/Authentication/auth_service.dart';
 import 'package:segregate1/Widgets/Dashboard.dart';
 import 'package:segregate1/Authentication/registration.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+// ↓↓↓ added imports for the redirect logic
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:segregate1/Widgets/ThirdPartyHomePage.dart';
+// ↑↑↑
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -27,6 +34,29 @@ class _LoginPageState extends State<LoginPage> {
     _password.dispose();
   }
 
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedCredentials();
+  }
+
+  Future<void> _loadSavedCredentials() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedEmail = prefs.getString('saved_email');
+    final savedPassword = prefs.getString('saved_password');
+    final savedRemember = prefs.getBool('saved_remember') ?? false;
+
+    if (savedRemember && savedEmail != null && savedPassword != null) {
+      setState(() {
+        _rememberMe = true;
+        _email.text = savedEmail;
+        _password.text = savedPassword;
+      });
+      // Optionally, auto-login:
+      _login();
+    }
+  }
+
   void _dashboard(BuildContext context) {
     if (_formKey.currentState!.validate()) {
       Navigator.push(
@@ -36,17 +66,17 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-
-  void _login() async {
-    // Check for admin credentials first.
+  Future<void> _login() async {
+    // Admin shortcut...
     if (_email.text.trim() == "admin" && _password.text == "123456") {
+      await _saveRememberPrefs();
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const AdminPage()),
       );
       return;
     }
-    // Otherwise, use your normal authentication.
+
     if (_formKey.currentState!.validate()) {
       final user = await _auth.loginUserWithEmailAndPassword(
         _email.text,
@@ -54,6 +84,26 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       if (user != null) {
+        await _saveRememberPrefs();
+
+        // ↓↓↓ ONLY ADDITION: redirect third-party accounts to their page
+        final uid = FirebaseAuth.instance.currentUser?.uid;
+        if (uid != null) {
+          final tpSnap = await FirebaseFirestore.instance
+              .collection('third_party_accounts')
+              .doc(uid)
+              .get();
+          if (tpSnap.exists) {
+            if (!mounted) return;
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const ThirdPartyHomePage()),
+            );
+            return; // stop here so the normal dashboard route doesn't run
+          }
+        }
+        // ↑↑↑ END OF ADDITION
+
         _dashboard(context);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -66,17 +116,30 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-void _showPrivacyPolicy(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      title: const Text("Privacy Policy", style: TextStyle(fontWeight: FontWeight.bold)),
-      content: SizedBox(
-        height: 300,
-        width: double.maxFinite,
-        child: SingleChildScrollView(
-          child: const Text("""
+  Future<void> _saveRememberPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (_rememberMe) {
+      await prefs.setString('saved_email', _email.text);
+      await prefs.setString('saved_password', _password.text);
+      await prefs.setBool('saved_remember', true);
+    } else {
+      await prefs.remove('saved_email');
+      await prefs.remove('saved_password');
+      await prefs.setBool('saved_remember', false);
+    }
+  }
+
+  void _showPrivacyPolicy(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: const Text("Privacy Policy", style: TextStyle(fontWeight: FontWeight.bold)),
+        content: SizedBox(
+          height: 300,
+          width: double.maxFinite,
+          child: SingleChildScrollView(
+            child: const Text("""
 2.1 Data Collection and Usage
 
 SegreGate collects personal data, such as names, contact details, and user activity, to provide efficient service. We use this data for:
@@ -96,29 +159,29 @@ SegreGate collects personal data, such as names, contact details, and user activ
 
 - Users can update or delete their personal data by accessing their profile settings.
           """),
+          ),
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Close", style: TextStyle(color: Colors.blue)),
+          ),
+        ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text("Close", style: TextStyle(color: Colors.blue)),
-        ),
-      ],
-    ),
-  );
-}
+    );
+  }
 
-void _showTermsAndConditions(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      title: const Text("Terms and Conditions", style: TextStyle(fontWeight: FontWeight.bold)),
-      content: SizedBox(
-        height: 300,
-        width: double.maxFinite,
-        child: SingleChildScrollView(
-          child: const Text("""
+  void _showTermsAndConditions(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: const Text("Terms and Conditions", style: TextStyle(fontWeight: FontWeight.bold)),
+        content: SizedBox(
+          height: 300,
+          width: double.maxFinite,
+          child: SingleChildScrollView(
+            child: const Text("""
 3.1 Eligibility
 
 - Users must be at least 18 years old or have parental consent to use SegreGate.
@@ -146,17 +209,17 @@ Users are prohibited from:
 - Harassing, threatening, or abusing other users.
 - Attempting to compromise the security and integrity of the platform.
           """),
+          ),
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Close", style: TextStyle(color: Colors.blue)),
+          ),
+        ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text("Close", style: TextStyle(color: Colors.blue)),
-        ),
-      ],
-    ),
-  );
-}
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

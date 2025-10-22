@@ -167,7 +167,7 @@ class DonationDetailsPage extends StatelessWidget {
                   },
                   style:
                       ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                  child: const Text('Message',
+                  child: const Text('Message/Request',
                       style: TextStyle(color: Colors.white)),
                 ),
               ),

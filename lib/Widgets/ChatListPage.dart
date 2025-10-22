@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:segregate1/ChatWithAdminPage.dart';
 import 'ChatPage.dart';
 
 class ChatListPage extends StatelessWidget {
@@ -23,9 +24,22 @@ class ChatListPage extends StatelessWidget {
     final currentUser = FirebaseAuth.instance.currentUser!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Chats"),
-        backgroundColor: Colors.blue,
-      ),
+  title: Text('Chats'),
+  backgroundColor: Colors.blue,
+  actions: [
+    IconButton(
+      icon: const Icon(Icons.support_agent),
+      tooltip: 'Chat with Admin',
+      onPressed: () {
+       Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const ChatWithAdminPage()),
+    );
+      },
+    ),
+  ],
+),
+
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection("chats")

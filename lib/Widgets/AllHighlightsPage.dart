@@ -13,7 +13,7 @@ class AllHighlightsPage extends StatefulWidget {
 }
 
 class _AllHighlightsPageState extends State<AllHighlightsPage> {
-    bool _isAscending = true;
+  bool _isAscending = true;
 
   @override
   Widget build(BuildContext context) {
@@ -23,11 +23,13 @@ class _AllHighlightsPageState extends State<AllHighlightsPage> {
         backgroundColor: Colors.green,
         actions: [
           IconButton(
-            icon: Icon(_isAscending ? Icons.arrow_downward : Icons.arrow_upward),
-            tooltip: _isAscending ? 'Sort Descending' : 'Sort Ascending',
+            icon: Icon(
+                _isAscending ? Icons.arrow_downward : Icons.arrow_upward),
+            tooltip:
+                _isAscending ? 'Sort Descending' : 'Sort Ascending',
             onPressed: () {
               setState(() {
-                _isAscending = !_isAscending;  // toggle when icon pressed
+                _isAscending = !_isAscending;
               });
             },
           ),
@@ -37,44 +39,51 @@ class _AllHighlightsPageState extends State<AllHighlightsPage> {
     );
   }
 
-  // Build list view for community highlights.
   Widget _buildHighlightsList(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('community_highlights')
-          .orderBy('date_time', descending: !_isAscending) 
+          .orderBy('date_time', descending: !_isAscending)
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
-          return Center(child: Text("Error loading highlights: ${snapshot.error}"));
+          return Center(
+              child:
+                  Text("Error loading highlights: ${snapshot.error}"));
         }
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return const Center(child: Text("No community highlights yet."));
+          return const Center(
+              child: Text("No community highlights yet."));
         }
+
         final highlights = snapshot.data!.docs;
         return ListView.builder(
           padding: const EdgeInsets.all(10),
           itemCount: highlights.length,
           itemBuilder: (context, index) {
-            final highlight = highlights[index].data() as Map<String, dynamic>;
+            final data =
+                highlights[index].data()! as Map<String, dynamic>;
             final docId = highlights[index].id;
-            final title = highlight['title'] ?? 'Untitled';
-            final imageUrl = highlight['image_url'];
-            // Extract date/time from the document.
+            final title = data['title'] ?? 'Untitled';
+            final imageUrl = data['image_url'] as String?;
+            final bool allowParticipation =
+                (data['allowParticipation'] as bool?) ?? false;
+
+            // parse date/time
             String dateStr = '';
             String timeStr = '';
             bool isPast = false;
-            if (highlight.containsKey('date_time') &&
-                highlight['date_time'] != null) {
-              final Timestamp ts = highlight['date_time'] as Timestamp;
-              final DateTime dt = ts.toDate();
+            if (data['date_time'] != null) {
+              final ts = data['date_time'] as Timestamp;
+              final dt = ts.toDate();
               dateStr = DateFormat('EEE, MMM d').format(dt);
               timeStr = DateFormat('hh:mm a').format(dt);
-              final bool isPast = dt.isBefore(DateTime.now());
+              isPast = dt.isBefore(DateTime.now());
             }
+
             return GestureDetector(
               onTap: () => _showHighlightDetails(context, docId),
               child: Card(
@@ -86,84 +95,128 @@ class _AllHighlightsPageState extends State<AllHighlightsPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Event image.
+                    // Image + DONE badge
                     ClipRRect(
-  borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-  child: Stack(
-    children: [
-      // Background event image
-      imageUrl != null && imageUrl.toString().isNotEmpty
-          ? Image.network(
-              imageUrl,
-              fit: BoxFit.cover,
-              width: double.infinity,
-              height: 200,
-              errorBuilder: (context, error, stackTrace) =>
-                  const Center(child: Icon(Icons.broken_image, size: 60)),
-            )
-          : Container(
-              height: 200,
-              color: Colors.grey[300],
-              child: const Center(child: Icon(Icons.image, size: 50, color: Colors.grey)),
-            ),
+                      borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(12)),
+                      child: Stack(
+                        children: [
+                          imageUrl != null && imageUrl.isNotEmpty
+                              ? Image.network(
+                                  imageUrl,
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                  height: 200,
+                                  errorBuilder: (c, e, st) =>
+                                      const Center(
+                                          child: Icon(
+                                    Icons.broken_image,
+                                    size: 60,
+                                  )),
+                                )
+                              : Container(
+                                  height: 200,
+                                  color: Colors.grey[300],
+                                  child: const Center(
+                                      child: Icon(
+                                    Icons.image,
+                                    size: 50,
+                                    color: Colors.grey,
+                                  )),
+                                ),
+                          if (isPast)
+                            Positioned(
+                              top: 10,
+                              right: 10,
+                              child: Container(
+                                padding:
+                                    const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: Colors.black
+                                      .withOpacity(0.7),
+                                  borderRadius:
+                                      BorderRadius.circular(20),
+                                ),
+                                child: const Text(
+                                  "DONE",
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight:
+                                          FontWeight.bold),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
 
-      // ✅ DONE badge if date has passed
-      if (highlight.containsKey('date_time') &&
-          highlight['date_time'] != null &&
-          (highlight['date_time'] as Timestamp).toDate().isBefore(DateTime.now()))
-        Positioned(
-          top: 10,
-          right: 10,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.7),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Text(
-              "DONE",
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ),
-    ],
-  ),
-),
-
-                    // Title container.
+                    // Title
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        padding:
+                            const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
                           color: Colors.green.shade100,
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius:
+                              BorderRadius.circular(20),
                         ),
                         child: Text(
                           title,
-                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.green),
+                          style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ),
-                    // Date & Time Row (if available).
+
+                    // Participation badge in list (optional mini badge)
+                    if (allowParticipation)
+                      Padding(
+                        padding:
+                            const EdgeInsets.symmetric(
+                                horizontal: 8.0, vertical: 4),
+                        child: Text(
+                          "Participation Open",
+                          style: TextStyle(
+                              color: Colors.blue.shade700,
+                              fontWeight: FontWeight.bold),
+                        ),
+                      ),
+
+                    // Date & Time
                     if (dateStr.isNotEmpty && timeStr.isNotEmpty)
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4),
+                        padding:
+                            const EdgeInsets.symmetric(
+                                horizontal: 8.0, vertical: 4),
                         child: Row(
                           children: [
-                            const Icon(Icons.calendar_today, size: 14, color: Colors.grey),
+                            const Icon(Icons.calendar_today,
+                                size: 14, color: Colors.grey),
                             const SizedBox(width: 4),
                             Text(
                               dateStr,
-                              style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: Colors.grey),
+                              style: const TextStyle(
+                                  fontSize: 12,
+                                  fontStyle: FontStyle.italic,
+                                  color: Colors.grey),
                             ),
                             const SizedBox(width: 8),
-                            const Icon(Icons.access_time, size: 14, color: Colors.grey),
+                            const Icon(Icons.access_time,
+                                size: 14, color: Colors.grey),
                             const SizedBox(width: 4),
                             Text(
                               timeStr,
-                              style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: Colors.grey),
+                              style: const TextStyle(
+                                  fontSize: 12,
+                                  fontStyle: FontStyle.italic,
+                                  color: Colors.grey),
                             ),
                           ],
                         ),
@@ -178,7 +231,6 @@ class _AllHighlightsPageState extends State<AllHighlightsPage> {
     );
   }
 
-  // Show full-screen details for a community highlight.
   void _showHighlightDetails(BuildContext context, String docId) {
     final currentUser = FirebaseAuth.instance.currentUser!;
     showDialog(
@@ -192,57 +244,72 @@ class _AllHighlightsPageState extends State<AllHighlightsPage> {
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
-          final data = snapshot.data!.data() as Map<String, dynamic>;
+          final data =
+              snapshot.data!.data()! as Map<String, dynamic>;
+
           final title = data['title'] ?? 'Untitled';
-          final description = data['description'] ?? 'No Description Available';
+          final description =
+              data['description'] ?? 'No Description';
           final imageUrl = data['image_url'] ?? '';
-          String dateStr = "";
-          String timeStr = "";
-          if (data.containsKey('date_time') && data['date_time'] != null) {
-            final Timestamp ts = data['date_time'] as Timestamp;
-            final DateTime dt = ts.toDate();
+          final bool allowParticipation =
+              (data['allowParticipation'] as bool?) ?? false;
+
+          // parse date/time
+          String dateStr = '';
+          String timeStr = '';
+          if (data['date_time'] != null) {
+            final ts = data['date_time'] as Timestamp;
+            final dt = ts.toDate();
             dateStr = DateFormat('EEE, MMM d').format(dt);
             timeStr = DateFormat('hh:mm a').format(dt);
           }
-          // Get participants list.
-          List<dynamic> participants = data.containsKey('participants')
-              ? List<dynamic>.from(data['participants'])
-              : [];
-          bool isParticipating = participants.contains(currentUser.uid);
-          int participantsCount = participants.length;
 
-          // Get attended users list.
-          List<dynamic> attendedUsers = data.containsKey('attendedUsers')
-              ? List<dynamic>.from(data['attendedUsers'])
-              : [];
-          bool isAttended = attendedUsers.contains(currentUser.uid);
+          // participants & attendance
+          final List<dynamic> participants =
+              List<dynamic>.from(data['participants'] ?? []);
+          final bool isParticipating =
+              participants.contains(currentUser.uid);
+          final int participantsCount = participants.length;
 
-          // Determine which badge or button to show.
+          final List<dynamic> attendedUsers =
+              List<dynamic>.from(data['attendedUsers'] ?? []);
+          final bool isAttended =
+              attendedUsers.contains(currentUser.uid);
+
+          // badge logic
           late Widget statusBadge;
           if (isAttended) {
             statusBadge = Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
                 color: Colors.green.shade100,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: const Text(
                 "Attended",
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.green),
+                style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green),
               ),
             );
           } else if (isParticipating) {
             statusBadge = Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
                     color: Colors.blue.shade100,
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: const Text(
                     "Participated",
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.blue),
+                    style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -252,7 +319,8 @@ class _AllHighlightsPageState extends State<AllHighlightsPage> {
                         .collection('community_highlights')
                         .doc(docId)
                         .update({
-                      'participants': FieldValue.arrayRemove([currentUser.uid])
+                      'participants':
+                          FieldValue.arrayRemove([currentUser.uid])
                     });
                     Navigator.pop(context);
                   },
@@ -267,7 +335,8 @@ class _AllHighlightsPageState extends State<AllHighlightsPage> {
                     .collection('community_highlights')
                     .doc(docId)
                     .update({
-                  'participants': FieldValue.arrayUnion([currentUser.uid])
+                  'participants':
+                      FieldValue.arrayUnion([currentUser.uid])
                 });
                 Navigator.pop(context);
               },
@@ -292,120 +361,182 @@ class _AllHighlightsPageState extends State<AllHighlightsPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Full image.
+                    // Full image
                     imageUrl.isNotEmpty
-                        ? SizedBox(
-                            width: MediaQuery.of(context).size.width,
-                            child: Image.network(
-                              imageUrl,
-                              fit: BoxFit.cover,
+                        ? Image.network(
+                            imageUrl,
+                            fit: BoxFit.cover,
+                            height: 300,
+                            errorBuilder:
+                                (c, e, st) => Container(
                               height: 300,
-                              errorBuilder: (context, error, stackTrace) => Container(
-                                height: 300,
-                                color: Colors.grey[300],
-                                child: const Icon(Icons.broken_image, size: 60),
-                              ),
+                              color: Colors.grey[300],
+                              child: const Icon(
+                                  Icons.broken_image, size: 60),
                             ),
                           )
                         : Container(
                             height: 300,
                             color: Colors.grey[300],
-                            child: const Icon(Icons.image, size: 60, color: Colors.grey),
+                            child: const Icon(Icons.image,
+                                size: 60, color: Colors.grey),
                           ),
                     Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment:
+                            CrossAxisAlignment.start,
                         children: [
-                          // Title.
-                          Text(
-                            title,
-                            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                          ),
+                          Text(title,
+                              style: const TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold)),
                           const SizedBox(height: 8),
-                          // Date & Time.
                           if (dateStr.isNotEmpty && timeStr.isNotEmpty)
                             Row(
                               children: [
-                                const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
+                                const Icon(Icons.calendar_today,
+                                    size: 16, color: Colors.grey),
                                 const SizedBox(width: 4),
-                                Text(
-                                  dateStr,
-                                  style: const TextStyle(fontSize: 14, fontStyle: FontStyle.italic, color: Colors.grey),
-                                ),
+                                Text(dateStr,
+                                    style: const TextStyle(
+                                        fontSize: 14,
+                                        fontStyle:
+                                            FontStyle.italic,
+                                        color: Colors.grey)),
                                 const SizedBox(width: 16),
-                                const Icon(Icons.access_time, size: 16, color: Colors.grey),
+                                const Icon(Icons.access_time,
+                                    size: 16, color: Colors.grey),
                                 const SizedBox(width: 4),
-                                Text(
-                                  timeStr,
-                                  style: const TextStyle(fontSize: 14, fontStyle: FontStyle.italic, color: Colors.grey),
-                                ),
+                                Text(timeStr,
+                                    style: const TextStyle(
+                                        fontSize: 14,
+                                        fontStyle:
+                                            FontStyle.italic,
+                                        color: Colors.grey)),
                               ],
                             ),
                           const SizedBox(height: 16),
-                          // Description.
-                          Text(
-                            description,
-                            style: const TextStyle(fontSize: 16),
-                          ),
-                          const SizedBox(height: 20),
-                          // Participation/Attended badge row.
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              statusBadge,
-                              Text(
-                                "$participantsCount participants",
-                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          // QR Button section.
-                          if (isParticipating && !isAttended)
-                            Center(
-                              child: ElevatedButton.icon(
-                                icon: const Icon(Icons.qr_code),
-                                label: const Text("Generate Attendance QR"),
-                                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                                onPressed: () {
-                                  final String uid = currentUser.uid;
-                                  final Map<String, String> qrPayload = {"uid": uid, "eventId": docId};
-                                  final String qrData = jsonEncode(qrPayload);
-                                  showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return Dialog(
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                        child: Container(
-                                          padding: const EdgeInsets.all(20),
-                                          width: MediaQuery.of(context).size.width * 0.7,
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              const Text(
-                                                "Show this QR to Admin",
-                                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                                              ),
-                                              const SizedBox(height: 16),
-                                              QrImageView(data: qrData, version: QrVersions.auto, size: 200),
-                                              const SizedBox(height: 16),
-                                              const Text(
-                                                "Ask the admin to scan this QR code to mark your attendance.",
-                                                textAlign: TextAlign.center,
-                                                style: TextStyle(fontSize: 14),
-                                              ),
-                                              const SizedBox(height: 20),
-                                              ElevatedButton(onPressed: () => Navigator.pop(context), child: const Text("Close")),
-                                            ],
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  );
-                                },
-                              ),
+                          Text(description,
+                              style:
+                                  const TextStyle(fontSize: 16)),
+
+                          // ─── only show participation UI if allowed ─
+                          if (allowParticipation) ...[
+                            Row(
+                              mainAxisAlignment:
+                                  MainAxisAlignment
+                                      .spaceBetween,
+                              children: [
+                                statusBadge,
+                                Text(
+                                  "$participantsCount participants",
+                                  style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight:
+                                          FontWeight.bold,
+                                      color:
+                                          Colors.black87),
+                                ),
+                              ],
                             ),
+                            const SizedBox(height: 12),
+
+                            if (isParticipating &&
+                                !isAttended)
+                              Center(
+                                child:
+                                    ElevatedButton.icon(
+                                  icon: const Icon(
+                                      Icons.qr_code),
+                                  label: const Text(
+                                      "Generate Attendance QR"),
+                                  style:
+                                      ElevatedButton.styleFrom(
+                                          backgroundColor:
+                                              Colors.green),
+                                  onPressed: () {
+                                    final uid =
+                                        currentUser.uid;
+                                    final qrData = jsonEncode({
+                                      "uid": uid,
+                                      "eventId": docId
+                                    });
+                                    showDialog(
+                                      context: context,
+                                      builder:
+                                          (BuildContext
+                                              context) {
+                                        return Dialog(
+                                          shape:
+                                              RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(
+                                                    16),
+                                          ),
+                                          child: Container(
+                                            padding:
+                                                const EdgeInsets.all(
+                                                    20),
+                                            width: MediaQuery.of(
+                                                        context)
+                                                    .size
+                                                    .width *
+                                                0.7,
+                                            child: Column(
+                                              mainAxisSize:
+                                                  MainAxisSize
+                                                      .min,
+                                              children: [
+                                                const Text(
+                                                  "Show this QR to Admin",
+                                                  style: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight
+                                                              .bold,
+                                                      fontSize:
+                                                          18),
+                                                ),
+                                                const SizedBox(
+                                                    height:
+                                                        16),
+                                                QrImageView(
+                                                    data:
+                                                        qrData,
+                                                    version: QrVersions
+                                                        .auto,
+                                                    size: 200),
+                                                const SizedBox(
+                                                    height:
+                                                        16),
+                                                const Text(
+                                                  "Ask the admin to scan this QR code to mark your attendance.",
+                                                  textAlign:
+                                                      TextAlign
+                                                          .center,
+                                                  style: TextStyle(
+                                                      fontSize:
+                                                          14),
+                                                ),
+                                                const SizedBox(
+                                                    height:
+                                                        20),
+                                                ElevatedButton(
+                                                    onPressed: () =>
+                                                        Navigator.pop(
+                                                            context),
+                                                    child: const Text(
+                                                        "Close")),
+                                              ],
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
+                              ),
+                          ],
                         ],
                       ),
                     ),

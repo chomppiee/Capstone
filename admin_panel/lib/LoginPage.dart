@@ -14,13 +14,17 @@ class _LoginPageState extends State<LoginPage> {
   String email = '';
   String password = '';
   bool _loading = false;
-  String? _error;
+  bool _obscurePassword = true;
+
+
+  // error message only for password field
+  String? passwordError;
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() {
       _loading = true;
-      _error = null;
+      passwordError = null;
     });
 
     debugPrint('🔑 LoginPage: attempting signIn with email="$email"');
@@ -30,17 +34,24 @@ class _LoginPageState extends State<LoginPage> {
           .signInWithEmailAndPassword(email: email, password: password);
       debugPrint('✅ LoginPage: signIn succeeded, uid=${cred.user?.uid}');
       if (!mounted) return;
-      // Navigate back to root so AuthGate can redirect based on role
       Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
     } on FirebaseAuthException catch (e) {
       debugPrint('❌ LoginPage: signIn failed: code=${e.code}, msg=${e.message}');
       setState(() {
-        _error = e.message;
+        if (e.code == 'wrong-password') {
+          passwordError = 'Wrong password';
+        } else if (e.code == 'user-not-found') {
+          passwordError = 'No user found with this email';
+        } else if (e.code == 'invalid-email') {
+          passwordError = 'Invalid email format';
+        } else {
+          passwordError = 'Login failed. Please try again.';
+        }
       });
     } catch (e) {
       debugPrint('⚠️ LoginPage: unexpected error: $e');
       setState(() {
-        _error = e.toString();
+        passwordError = 'An unexpected error occurred. Please try again.';
       });
     } finally {
       setState(() {
@@ -51,8 +62,6 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-
     return Scaffold(
       body: Container(
         width: double.infinity,
@@ -64,114 +73,135 @@ class _LoginPageState extends State<LoginPage> {
             end: Alignment.bottomCenter,
           ),
         ),
-        child: SingleChildScrollView(
-          child: SizedBox(
-            height: size.height,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 // Logo
                 Image.asset(
                   'assets/logo.png',
-                  width: 96,
-                  height: 96,
+                  width: 110,
+                  height: 110,
                 ),
                 const SizedBox(height: 16),
                 const Text(
                   'Admin Panel Login',
                   style: TextStyle(
-                    fontSize: 24,
+                    fontSize: 26,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
                 ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Secure Access Portal',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white70,
+                  ),
+                ),
                 const SizedBox(height: 32),
 
-                // Constrain Card width
-                SizedBox(
-                  width: size.width * 0.7,
-                  child: Card(
-                    elevation: 8,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            if (_error != null) ...[
-                              Text(
-                                _error!,
-                                style: const TextStyle(
-                                  color: Colors.red,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                textAlign: TextAlign.center,
+                // Login Card
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.9),
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.15),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          TextFormField(
+                            decoration: InputDecoration(
+                              labelText: 'Email',
+                              filled: true,
+                              fillColor: Colors.grey[100],
+                              prefixIcon: const Icon(Icons.email_outlined),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                              const SizedBox(height: 12),
-                            ],
-                            TextFormField(
-                              decoration: InputDecoration(
-                                labelText: 'Email',
-                                prefixIcon: const Icon(Icons.email_outlined),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              keyboardType: TextInputType.emailAddress,
-                              onChanged: (v) => email = v.trim(),
-                              validator: (v) => v != null && v.contains('@')
-                                  ? null
-                                  : 'Enter a valid email',
                             ),
-                            const SizedBox(height: 16),
-                            TextFormField(
-                              decoration: InputDecoration(
-                                labelText: 'Password',
-                                prefixIcon: const Icon(Icons.lock_outline),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              obscureText: true,
-                              onChanged: (v) => password = v,
-                              validator: (v) => v != null && v.length >= 6
-                                  ? null
-                                  : 'Minimum 6 characters',
-                            ),
-                            const SizedBox(height: 24),
-                            _loading
-                                ? const Center(
-                                    child: CircularProgressIndicator(),
-                                  )
-                                : ElevatedButton(
-                                    onPressed: _submit,
-                                    style: ElevatedButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 16,
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      elevation: 4,
-                                    ),
-                                    child: const Text(
-                                      'Sign In',
-                                      style: TextStyle(fontSize: 16),
-                                    ),
-                                  ),
-                            const SizedBox(height: 12),
-                            TextButton(
+                            keyboardType: TextInputType.emailAddress,
+                            onChanged: (v) => email = v.trim(),
+                            validator: (v) => v != null && v.contains('@')
+                                ? null
+                                : 'Enter a valid email',
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+  decoration: InputDecoration(
+    labelText: 'Password',
+    filled: true,
+    fillColor: Colors.grey[100],
+    prefixIcon: const Icon(Icons.lock_outline),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+    ),
+    errorText: passwordError, // show error here
+    suffixIcon: IconButton(
+      onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+      icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
+      tooltip: _obscurePassword ? 'Show password' : 'Hide password',
+    ),
+  ),
+  obscureText: _obscurePassword,
+  onChanged: (v) {
+    password = v;
+    if (passwordError != null) {
+      setState(() => passwordError = null);
+    }
+  },
+  validator: (v) => (v == null || v.isEmpty) ? 'Password is required' : null,
+),
+
+                          const SizedBox(height: 12),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
                               onPressed: () {
                                 // TODO: Implement forgot password flow
                               },
                               child: const Text('Forgot Password?'),
                             ),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(height: 12),
+                          _loading
+                              ? const Center(
+                                  child: CircularProgressIndicator(),
+                                )
+                              : ElevatedButton(
+                                  onPressed: _submit,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF4A90E2),
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 16,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    elevation: 6,
+                                  ),
+                                  child: const Text(
+                                    'Sign In',
+                                    style: TextStyle(fontSize: 16),
+                                  ),
+                                ),
+                        ],
                       ),
                     ),
                   ),

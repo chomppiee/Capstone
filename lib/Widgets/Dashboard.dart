@@ -10,6 +10,7 @@ import 'package:segregate1/Widgets/PointsPage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:segregate1/Widgets/BarangayShareCenterPage.dart';
+import 'package:segregate1/Widgets/notif.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -109,7 +110,12 @@ class DashboardPage extends StatelessWidget {
                     ),
                     IconButton(
                       icon: const Icon(Icons.notifications, color: Colors.black54),
-                      onPressed: () {},
+                      onPressed: () {
+                            Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const NotificationPage()),
+    );
+                      },
                     ),
                   ],
                 );
@@ -130,12 +136,6 @@ class DashboardPage extends StatelessWidget {
                   'Categories',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-                TextButton(
-                  onPressed: () {
-                    // Optional "See All" action, if you want a dedicated page
-                  },
-                  child: const Text('See All'),
-                ),
               ],
             ),
            // 2) In your build(), replace the two Row(...) blocks for Categories with:
@@ -145,15 +145,8 @@ const SizedBox(height: 8),
 // --- Row 1: two half-width buttons ---
 Row(
   children: [
-    Expanded(
-      child: _buildCategoryButton(
-        context: context,
-        icon: Icons.campaign,
-        label: 'Announcements',
-        targetPage: const AnnouncementsPage(),
-      ),
-    ),
-    const SizedBox(width: 8),
+
+    const SizedBox(width: 0),
     Expanded(
       child: _buildCategoryButton(
         context: context,
@@ -209,7 +202,10 @@ const SizedBox(height: 16),
             _buildSectionHeader(
                 context, 'Community Highlights', const AllHighlightsPage()),
             _buildHighlightsList(),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
+_buildSectionHeader(context, 'Latest Announcements', const AnnouncementsPage()),
+_buildAnnouncementsSection(),
+const SizedBox(height: 20),
           ],
         ),
       ),
@@ -507,4 +503,141 @@ Widget _buildCategoryButton({
       ),
     );
   }
+Widget _buildAnnouncementsSection() {
+  return StreamBuilder<QuerySnapshot>(
+    stream: FirebaseFirestore.instance
+        .collection('announcements')
+        .orderBy('timestamp', descending: true)
+        .limit(5)
+        .snapshots(),
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return const Center(child: CircularProgressIndicator());
+      }
+      if (snapshot.hasError) {
+        return const Center(child: Text('Error loading announcements'));
+      }
+      if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+        return const Center(child: Text('No announcements yet.'));
+      }
+
+      final announcements = snapshot.data!.docs;
+
+      return Column(
+        children: announcements.map((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+
+          final String title = data['title'] ?? 'Untitled';
+          final String description = data['description'] ?? '';
+          final String imageUrl = data['imageUrl'] ?? '';
+          final Timestamp? ts = data['timestamp'] as Timestamp?;
+          final DateTime? dt = ts?.toDate();
+          final String timeStr = dt != null
+              ? DateFormat('EEE, MMM d, yyyy – h:mm a').format(dt)
+              : 'Unknown date';
+
+          return GestureDetector(
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (context) => Dialog(
+                  insetPadding: EdgeInsets.zero,
+                  backgroundColor: Colors.transparent,
+                  child: Scaffold(
+                    appBar: AppBar(
+                      backgroundColor: Colors.green,
+                      elevation: 0,
+                      leading: IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                      title: Text(title),
+                    ),
+                    body: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (imageUrl.isNotEmpty)
+                            Image.network(
+                              imageUrl,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              height: 300,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Icon(Icons.broken_image, size: 60),
+                            ),
+                          Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  title,
+                                  style: const TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  timeStr,
+                                  style: const TextStyle(
+                                      fontSize: 12,
+                                      fontStyle: FontStyle.italic,
+                                      color: Colors.grey),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  description,
+                                  style: const TextStyle(fontSize: 16),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+            child: Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              child: ListTile(
+                leading: const Icon(Icons.campaign, color: Colors.green),
+                title: Text(
+                  title,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      description,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      timeStr,
+                      style: const TextStyle(
+                        fontStyle: FontStyle.italic,
+                        fontSize: 12,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      );
+    },
+  );
+}
+
+
 }

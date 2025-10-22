@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:segregate1/Authentication/Loginpage.dart';
 import 'package:segregate1/Widgets/ChangePasswordPage.dart';
 import 'dart:async';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({Key? key}) : super(key: key);
@@ -98,10 +99,22 @@ class _ProfilePageState extends State<ProfilePage> {
     await _loadUserData();
   }
 
-  Future<void> _logout() async {
-    await _auth.signOut();
-    Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginPage()));
-  }
+Future<void> _logout() async {
+  // 1. Clear stored credentials
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.remove('saved_email');
+  await prefs.remove('saved_password');
+  await prefs.setBool('saved_remember', false);
+
+  // 2. Firebase sign-out
+  await _auth.signOut();
+
+  // 3. Go back to login screen
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(builder: (_) => const LoginPage()),
+  );
+}
 
     Future<void> _deleteAccount() async {
   int secondsRemaining = 7;

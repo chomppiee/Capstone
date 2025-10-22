@@ -29,7 +29,10 @@ class AuthService {
     } catch (e) {}
     return null;
   }
-
+  /// Send a password-reset email
+  Future<void> sendPasswordReset(String email) async {
+    await _auth.sendPasswordResetEmail(email: email);
+  }
   Future<void> signout() async {
     try {
       await _auth.signOut();

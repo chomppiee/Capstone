@@ -35,6 +35,7 @@ class _DonationPageState extends State<DonationPage> with TickerProviderStateMix
     'Adult Clothing',
     'Children\'s Clothing',
     'Shoes & Footwear',
+    'Recyclable Materials',
     'Bags & Backpacks',
     'Accessories',
     'Small Furniture',

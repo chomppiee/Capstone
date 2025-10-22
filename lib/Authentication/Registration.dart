@@ -57,6 +57,8 @@ class _SignUpPageState extends State<SignUpPage> {
           'email': _emailController.text,
           'address': _addressController.text,
           'createdAt': FieldValue.serverTimestamp(),
+          'points':          0,                     // ← initialize points here
+          'events_attended': 0,
         });
 
         Navigator.pushReplacement(

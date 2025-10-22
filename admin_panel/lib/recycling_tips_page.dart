@@ -304,7 +304,7 @@ class _AdminRecyclingPanelState extends State<AdminRecyclingPanel> {
             labelColor: Colors.black,
             tabs: [
               Tab(text: "Post Tip"),
-              Tab(text: "Post Videos"),
+
             ],
           ),
         ),

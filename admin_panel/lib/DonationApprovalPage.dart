@@ -28,7 +28,8 @@ class DonationApprovalPage extends StatelessWidget {
         'to': donorUid,
         'type': 'donationApproved',
         'donationId': donationId,
-        'message': '“$title” has been approved! Show your QR code when dropping off.',
+        'message':
+            '“$title” has been approved! Show your QR code when dropping off.',
         'timestamp': FieldValue.serverTimestamp(),
         'read': false,
       });
@@ -47,6 +48,36 @@ class DonationApprovalPage extends StatelessWidget {
       const SnackBar(content: Text('Donation approved & donor notified')),
     );
   }
+
+  // >>> Added: delete helper (minimal, with confirm dialog)
+  Future<void> _deleteDonation(BuildContext context, String id) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete donation?'),
+        content: const Text(
+            'This will permanently remove the item from the list.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true) {
+      await FirebaseFirestore.instance.collection('donations').doc(id).delete();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Donation deleted')),
+      );
+    }
+  }
+  // <<< End added
 
   void _showPendingDonations(BuildContext context) {
     final width = MediaQuery.of(context).size.width * 0.8;
@@ -121,11 +152,77 @@ class DonationApprovalPage extends StatelessWidget {
                         IconButton(
                           icon: const Icon(Icons.delete, color: Colors.red),
                           onPressed: () async {
-                            await doc.reference.delete();
-                            Navigator.of(context).pop();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Donation deleted')),
+                            final reasonController = TextEditingController();
+
+                            // Show input dialog
+                            final result = await showDialog<bool>(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                title: const Text('Decline Donation'),
+                                content: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Text(
+                                        'Please provide a reason for declining this donation:'),
+                                    const SizedBox(height: 12),
+                                    TextField(
+                                      controller: reasonController,
+                                      decoration: const InputDecoration(
+                                        hintText: 'Type reason here...',
+                                        border: OutlineInputBorder(),
+                                      ),
+                                      maxLines: 3,
+                                    ),
+                                  ],
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.of(ctx).pop(false),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      if (reasonController.text
+                                          .trim()
+                                          .isNotEmpty) {
+                                        Navigator.of(ctx).pop(true);
+                                      }
+                                    },
+                                    child: const Text('Decline'),
+                                  ),
+                                ],
+                              ),
                             );
+
+                            if (result == true) {
+                              final reason = reasonController.text.trim();
+                              final donorUid = doc['userId'];
+                              final title = doc['title'] ?? 'Your donation';
+
+                              await doc.reference.delete();
+
+                              // Send notification
+                              await FirebaseFirestore.instance
+                                  .collection('notifications')
+                                  .add({
+                                'to': donorUid,
+                                'type': 'donationDeclined',
+                                'donationId': doc.id,
+                                'message':
+                                    'Your donation "$title" was declined.\nReason: $reason',
+                                'timestamp':
+                                    FieldValue.serverTimestamp(),
+                                'read': false,
+                              });
+
+                              Navigator.of(context).pop();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text(
+                                        'Donation declined and user notified')),
+                              );
+                            }
                           },
                         ),
                       ],
@@ -269,28 +366,51 @@ class DonationApprovalPage extends StatelessWidget {
                       clipBehavior: Clip.hardEdge,
                       child: InkWell(
                         onTap: () => _showDonationDetails(context, doc.id),
-                        child: Column(
+
+                        // >>> Modified: wrap existing Column with a Stack to show delete icon
+                        child: Stack(
                           children: [
-                            Expanded(
-                              child: imageUrl != null
-                                  ? Image.network(
-                                      imageUrl,
-                                      width: double.infinity,
-                                      fit: BoxFit.cover,
-                                    )
-                                  : Container(color: Colors.grey[200]),
+                            Column(
+                              children: [
+                                Expanded(
+                                  child: imageUrl != null
+                                      ? Image.network(
+                                          imageUrl,
+                                          width: double.infinity,
+                                          fit: BoxFit.cover,
+                                        )
+                                      : Container(color: Colors.grey[200]),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.all(8),
+                                  child: Text(
+                                    title,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium,
+                                  ),
+                                ),
+                              ],
                             ),
-                            Padding(
-                              padding: const EdgeInsets.all(8),
-                              child: Text(
-                                title,
-                                overflow: TextOverflow.ellipsis,
-                                style:
-                                    Theme.of(context).textTheme.titleMedium,
+                            Positioned(
+                              right: 6,
+                              top: 6,
+                              child: Material(
+                                color: Colors.white70,
+                                shape: const CircleBorder(),
+                                child: IconButton(
+                                  icon: const Icon(Icons.delete,
+                                      color: Colors.red),
+                                  tooltip: 'Delete',
+                                  onPressed: () =>
+                                      _deleteDonation(context, doc.id),
+                                ),
                               ),
                             ),
                           ],
                         ),
+                        // <<< End modified
                       ),
                     );
                   },

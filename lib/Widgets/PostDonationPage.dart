@@ -22,6 +22,7 @@ class _PostDonationPageState extends State<PostDonationPage> {
     'Adult Clothing',
     'Children\'s Clothing',
     'Shoes & Footwear',
+    'Recyclable Materials',
     'Bags & Backpacks',
     'Accessories',
     'Small Furniture',
@@ -82,37 +83,55 @@ class _PostDonationPageState extends State<PostDonationPage> {
     );
   }
 
-  Future<void> _submitDonation() async {
-    if (_titleController.text.isEmpty ||
-        _descController.text.isEmpty ||
-        _selectedImagePath == null ||
-        _selectedCategory == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all fields and select an image and category')),
-      );
-      return;
-    }
-
-    if (_isPosting) return;
-
-    setState(() => _isPosting = true);
-    _showLoadingDialog();
-
-    await postDonation(
-      _titleController.text,
-      _descController.text,
-      _selectedImagePath!,
-      _selectedCategory!,
-      context,
+Future<void> _submitDonation() async {
+  if (_titleController.text.isEmpty ||
+      _descController.text.isEmpty ||
+      _selectedImagePath == null ||
+      _selectedCategory == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Please fill all fields and select an image and category')),
     );
-
-    if (mounted) {
-      Navigator.pop(context); // close loading
-      Navigator.pop(context); // return to previous
-    }
-
-    setState(() => _isPosting = false);
+    return;
   }
+
+  if (_isPosting) return;
+
+  setState(() => _isPosting = true);
+  _showLoadingDialog();
+
+  await postDonation(
+    _titleController.text,
+    _descController.text,
+    _selectedImagePath!,
+    _selectedCategory!,
+    context,
+  );
+
+  if (mounted) {
+    Navigator.pop(context); // Close loading dialog
+
+    // Show "waiting for approval" dialog
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Submitted'),
+        content: const Text('Your donation has been posted and is now waiting for admin approval.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Close this dialog
+              Navigator.pop(context); // Navigate back to previous screen
+            },
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  setState(() => _isPosting = false);
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -165,18 +184,40 @@ class _PostDonationPageState extends State<PostDonationPage> {
               maxLines: 3,
             ),
             const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              decoration: const InputDecoration(
-                labelText: 'Category',
-                border: OutlineInputBorder(),
-              ),
-              value: _selectedCategory,
-              hint: const Text('Select a category'),
-              items: _categories.map((category) {
-                return DropdownMenuItem(value: category, child: Text(category));
-              }).toList(),
-              onChanged: (v) => setState(() => _selectedCategory = v),
-            ),
+DropdownButtonFormField<String>(
+  value: _selectedCategory,
+  isExpanded: true, // let the text take the full width of the field
+  decoration: const InputDecoration(
+    labelText: 'Category',
+    isDense: true,
+    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    border: OutlineInputBorder(),            // ← keep the box
+    enabledBorder: OutlineInputBorder(),     // ← keep the box (enabled)
+    focusedBorder: OutlineInputBorder(),     // ← keep the box (focused)
+  ),
+  icon: const Icon(Icons.arrow_drop_down),   // use the built-in chevron
+  hint: const Text(
+    'Select a category',
+    overflow: TextOverflow.ellipsis,         // prevent hint overflow
+    maxLines: 1,
+    softWrap: false,
+  ),
+  items: _categories.map((c) {
+    return DropdownMenuItem<String>(
+      value: c,
+      child: Text(
+        c,
+        overflow: TextOverflow.ellipsis,      // prevent selected text overflow
+        maxLines: 1,
+        softWrap: false,
+      ),
+    );
+  }).toList(),
+  menuMaxHeight: 350,                         // optional: tidy long menus
+  onChanged: (v) => setState(() => _selectedCategory = v),
+),
+
+
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _isPosting ? null : _submitDonation,

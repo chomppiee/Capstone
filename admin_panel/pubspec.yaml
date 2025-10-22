@@ -52,6 +52,8 @@ dependencies:
   excel: ^4.0.6
   path_provider: ^2.1.5
   share_plus: ^11.0.0
+  timeago: ^3.6.1
+  profanity_filter: ^2.0.0
 
 
 dev_dependencies:
