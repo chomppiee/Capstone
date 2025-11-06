@@ -215,19 +215,34 @@ class _ThirdPartyAccountsTabState extends State<ThirdPartyAccountsTab> {
                           final uid = cred.user!.uid;
 
                           // Write Firestore doc (doc id = auth uid)
-                          await FirebaseFirestore.instance
-                              .collection('third_party_accounts')
-                              .doc(uid)
-                              .set({
-                            'company': company,
-                            'contactName': contact,
-                            'email': email,
-                            'phone': phone,
-                            'status': status,
-                            'authUid': uid,
-                            'createdAt': FieldValue.serverTimestamp(),
-                            'updatedAt': FieldValue.serverTimestamp(),
-                          });
+                          try {
+  await cred.user!.sendEmailVerification();
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text('Verification email sent to $email')),
+  );
+} catch (e) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text('Failed to send verification email: $e'),
+      backgroundColor: Colors.red,
+    ),
+  );
+}
+
+// ✅ Write Firestore doc (doc id = auth uid)
+await FirebaseFirestore.instance
+    .collection('third_party_accounts')
+    .doc(uid)
+    .set({
+  'company': company,
+  'contactName': contact,
+  'email': email,
+  'phone': phone,
+  'status': status,
+  'authUid': uid,
+  'createdAt': FieldValue.serverTimestamp(),
+  'updatedAt': FieldValue.serverTimestamp(),
+});
                         }
 
                         if (!mounted) return;

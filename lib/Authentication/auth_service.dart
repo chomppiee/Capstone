@@ -1,41 +1,53 @@
+// lib/Authentication/auth_service.dart
 import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthService {
-  final _auth = FirebaseAuth.instance;
-  Future<User?> createUserWithEmailAndPassword(
-    String email,
-    String password,
-  ) async {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  /// --- Create User ---
+  Future<User?> createUserWithEmailAndPassword(String email, String password) async {
     try {
-      final cred = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
+      final credential = await _auth.createUserWithEmailAndPassword(
+        email: email.trim(),
+        password: password.trim(),
       );
-      return cred.user;
-    } catch (e) {}
-    return null;
+      return credential.user;
+    } on FirebaseAuthException catch (e) {
+      rethrow;
+    }
   }
 
-  Future<User?> loginUserWithEmailAndPassword(
-    String email,
-    String password,
-  ) async {
+  /// --- Login User ---
+  Future<User?> signInWithEmailAndPassword(String email, String password) async {
     try {
-      final cred = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
+      final credential = await _auth.signInWithEmailAndPassword(
+        email: email.trim(),
+        password: password.trim(),
       );
-      return cred.user;
-    } catch (e) {}
-    return null;
+      return credential.user;
+    } on FirebaseAuthException catch (e) {
+      rethrow;
+    }
   }
-  /// Send a password-reset email
-  Future<void> sendPasswordReset(String email) async {
-    await _auth.sendPasswordResetEmail(email: email);
+
+  /// --- Send Password Reset Email ---
+  Future<void> sendPasswordResetEmail(String email) async {
+    await _auth.sendPasswordResetEmail(email: email.trim());
   }
-  Future<void> signout() async {
-    try {
-      await _auth.signOut();
-    } catch (e) {}
+
+  /// --- Send Email Verification ---
+  Future<void> sendEmailVerification() async {
+    final user = _auth.currentUser;
+    if (user != null && !user.emailVerified) {
+      await user.sendEmailVerification();
+    }
   }
+
+  /// --- Sign Out ---
+  Future<void> signOut() async {
+    await _auth.signOut();
+  }
+
+  /// --- Get Current User ---
+  User? get currentUser => _auth.currentUser;
 }

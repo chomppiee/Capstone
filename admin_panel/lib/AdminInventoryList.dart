@@ -6,6 +6,8 @@ import 'dart:html' as html;
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:excel/excel.dart';
+import 'AdminClaimsPage.dart';
+
 
 class AdminInventoryList extends StatefulWidget {
   const AdminInventoryList({Key? key}) : super(key: key);
@@ -33,6 +35,12 @@ class _AdminInventoryListState extends State<AdminInventoryList> {
     return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')} '
         '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
   }
+  void _openClaims() {
+  Navigator.of(context).push(
+    MaterialPageRoute(builder: (_) => const AdminClaimsPage()),
+  );
+}
+
 
 Future<void> _moveEligibleToThirdParty() async {
   final now = DateTime.now();
@@ -397,6 +405,11 @@ Future<void> _moveEligibleToThirdParty() async {
             tooltip: 'Move eligible to Third-Party',
             onPressed: _moveEligibleToThirdParty,
           ),
+          IconButton(
+  tooltip: 'Claims',
+  onPressed: _openClaims,
+  icon: const Icon(Icons.assignment_turned_in),
+),
         ],
       ),
       body: SingleChildScrollView(

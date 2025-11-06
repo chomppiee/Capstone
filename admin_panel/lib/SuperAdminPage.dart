@@ -196,14 +196,51 @@ class _SuperAdminPageState extends State<SuperAdminPage> {
 
                 const Spacer(),
                 ListTile(
-                  leading: const Icon(Icons.logout, color: Color.fromARGB(255, 0, 0, 0)),
-                  title: const Text('Logout', style: TextStyle(color: Color.fromARGB(255, 0, 0, 0))),
-                  onTap: () async {
-                    await FirebaseAuth.instance.signOut();
-                    if (!mounted) return;
-                    Navigator.of(context).pushReplacementNamed('/login');
-                  },
-                ),
+  leading: const Icon(Icons.logout, color: Color.fromARGB(255, 0, 0, 0)),
+  title: const Text(
+    'Logout',
+    style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
+  ),
+  onTap: () async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: const Text(
+          'Confirm Logout',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: const Text(
+          'Are you sure you want to log out?',
+          style: TextStyle(fontSize: 15),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Colors.blue),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text(
+              'Logout',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await FirebaseAuth.instance.signOut();
+      if (!context.mounted) return;
+      Navigator.of(context).pushReplacementNamed('/login');
+    }
+  },
+),
+
               ],
             ),
           ),

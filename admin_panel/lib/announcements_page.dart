@@ -142,43 +142,71 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
     }
   }
 
-  Future<void> _deleteAnnouncement(String docId, String? imageUrl) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Delete announcement?'),
-        content: const Text('This action cannot be undone.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete')),
-        ],
-      ),
-    );
-    if (confirm != true) return;
+Future<void> _deleteAnnouncement(String docId, String? imageUrl) async {
+  final confirm = await showDialog<bool>(
+    context: context,
+    builder: (_) => AlertDialog(
+      title: const Text('Archive Announcement?'),
+      content: const Text('This announcement will be moved to the archive.'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, true),
+          child: const Text('Archive'),
+        ),
+      ],
+    ),
+  );
 
-    try {
-      await FirebaseFirestore.instance.collection('announcements').doc(docId).delete();
+  if (confirm != true) return;
 
-      if ((imageUrl ?? '').isNotEmpty) {
-        final parts = imageUrl!.split('/o/');
-        if (parts.length > 1) {
-          final filePathEncoded = parts[1].split('?').first;
-          final filePath = Uri.decodeComponent(filePathEncoded);
-          await FirebaseStorage.instance.ref(filePath).delete();
-        }
-      }
+  try {
+    // Fetch the current document data before deleting
+    final docRef = FirebaseFirestore.instance.collection('announcements').doc(docId);
+    final docSnap = await docRef.get();
+    final data = docSnap.data();
 
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('Announcement deleted.')));
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Error deleting: $e')));
+    if (data != null) {
+      // Add the deleted document to the history collection
+      await FirebaseFirestore.instance
+          .collection('announcement_history')
+          .doc(docId)
+          .set({
+        ...data,
+        'deleted_at': FieldValue.serverTimestamp(), // ✅ timestamp for sorting
+      });
+    }
+
+    // Then delete the document from the active announcements collection
+    await docRef.delete();
+
+    // Optionally delete image from Storage if it exists
+    if ((imageUrl ?? '').isNotEmpty) {
+      final parts = imageUrl!.split('/o/');
+      if (parts.length > 1) {
+        final filePathEncoded = parts[1].split('?').first;
+        final filePath = Uri.decodeComponent(filePathEncoded);
+        await FirebaseStorage.instance.ref(filePath).delete();
       }
     }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Announcement moved to archive.')),
+      );
+    }
+  } catch (e) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error archiving announcement: $e')),
+      );
+    }
   }
+}
+
 
   Future<void> _showEditUI(DocumentSnapshot doc) async {
     final data = doc.data()! as Map<String, dynamic>;
@@ -334,7 +362,7 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
     }
   }
 
-  @override
+ @override
   Widget build(BuildContext context) {
     final today = _todayDateOnly();
 
@@ -342,26 +370,21 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
       appBar: AppBar(title: const Text('Announcements')),
       body: LayoutBuilder(
         builder: (context, constraints) {
-          const double outerPadding = 16; // must match SingleChildScrollView padding
-          const double spacing = 16;      // Wrap spacing between columns
+          const double outerPadding = 16;
+          const double spacing = 16;
           final bool wide = constraints.maxWidth >= 800;
 
-          // Width available INSIDE the scroll view padding
           final double available =
               (constraints.maxWidth - (outerPadding * 2)).clamp(0, double.infinity);
+          final double cardWidth =
+              wide ? ((available - spacing) / 2).floorToDouble() : available;
 
-          // Exact two columns when wide; floorToDouble prevents 1–2px rounding overflow
-          final double cardWidth = wide
-              ? ((available - spacing) / 2).floorToDouble()
-              : available;
-
-          return Align(
-            alignment: Alignment.topCenter,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(outerPadding),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+return Align(
+  alignment: Alignment.topCenter,
+  child: ListView(
+    padding: const EdgeInsets.all(outerPadding),
+    shrinkWrap: true,
+    children: [
                   // ------- Form -------
                   Card(
                     clipBehavior: Clip.antiAlias,
@@ -372,8 +395,10 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('Create Announcement',
-                                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+                            const Text(
+                              'Create Announcement',
+                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                            ),
                             const SizedBox(height: 12),
                             TextFormField(
                               controller: _titleController,
@@ -382,7 +407,9 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
                                 border: OutlineInputBorder(),
                               ),
                               validator: (v) =>
-                                  (v == null || v.trim().isEmpty) ? 'Title is required' : null,
+                                  (v == null || v.trim().isEmpty)
+                                      ? 'Title is required'
+                                      : null,
                             ),
                             const SizedBox(height: 12),
                             TextFormField(
@@ -393,7 +420,9 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
                                 border: OutlineInputBorder(),
                               ),
                               validator: (v) =>
-                                  (v == null || v.trim().isEmpty) ? 'Description is required' : null,
+                                  (v == null || v.trim().isEmpty)
+                                      ? 'Description is required'
+                                      : null,
                             ),
                             const SizedBox(height: 12),
                             Row(
@@ -409,7 +438,9 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
                                 OutlinedButton.icon(
                                   onPressed: _pickImage,
                                   icon: const Icon(Icons.image),
-                                  label: Text(_imageBytes == null ? 'Add image' : 'Change image'),
+                                  label: Text(
+                                    _imageBytes == null ? 'Add image' : 'Change image',
+                                  ),
                                 ),
                               ],
                             ),
@@ -419,17 +450,68 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
                                 'Selected date is in the past. Please choose today or later.',
                                 style: TextStyle(color: Colors.red),
                               ),
+
+                            // ✅ "See Attachment" block
                             if (_imageBytes != null) ...[
                               const SizedBox(height: 8),
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: Image.memory(
-                                  _imageBytes!,
-                                  height: 160,
-                                  fit: BoxFit.cover,
+                              GestureDetector(
+                                onTap: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => Dialog(
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          ClipRRect(
+  borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+  child: ConstrainedBox(
+    constraints: const BoxConstraints(
+      maxWidth: 400,
+      maxHeight: 300,
+    ),
+    child: Image.memory(
+      _imageBytes!,
+      fit: BoxFit.contain,
+    ),
+  ),
+),
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(context),
+                                            child: const Text('Close'),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[200],
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: Colors.grey),
+                                  ),
+                                  child: const Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.image, color: Colors.green),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        'Photo Uploaded (See Attachment)',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.black87,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ],
+
                             const SizedBox(height: 16),
                             SizedBox(
                               width: double.infinity,
@@ -439,7 +521,8 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
                                     ? const SizedBox(
                                         height: 20,
                                         width: 20,
-                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                        child:
+                                            CircularProgressIndicator(strokeWidth: 2),
                                       )
                                     : const Text('Post Announcement'),
                               ),
@@ -451,11 +534,10 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
                   ),
 
                   const SizedBox(height: 24),
-
-                  // ------- Active Announcements -------
                   const Text('Announcements',
                       style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
                   const SizedBox(height: 8),
+
                   StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                     stream: FirebaseFirestore.instance
                         .collection('announcements')
@@ -463,21 +545,20 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
                         .snapshots(),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Padding(
-                          padding: EdgeInsets.all(8.0),
-                          child: Center(child: CircularProgressIndicator()),
-                        );
+                        return const Center(child: CircularProgressIndicator());
                       }
                       final docs = snapshot.data?.docs ?? [];
                       if (docs.isEmpty) {
-                        return Card(
+                        return const Card(
                           child: Padding(
-                            padding: const EdgeInsets.all(16.0),
+                            padding: EdgeInsets.all(16.0),
                             child: Row(
-                              children: const [
+                              children: [
                                 Icon(Icons.campaign_outlined),
                                 SizedBox(width: 12),
-                                Expanded(child: Text('No announcements yet. Create your first one above.')),
+                                Expanded(
+                                    child: Text(
+                                        'No announcements yet. Create your first one above.')),
                               ],
                             ),
                           ),
@@ -485,7 +566,6 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
                       }
 
                       if (wide) {
-                        // Two columns with exact available width (prevents overflows)
                         return SizedBox(
                           width: available,
                           child: Wrap(
@@ -541,38 +621,37 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
                   ),
 
                   const SizedBox(height: 24),
-
-                  // ------- History -------
                   const Text('History',
                       style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
                   const SizedBox(height: 8),
+
                   StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                    stream: FirebaseFirestore.instance
-                        .collection('announcement_history')
-                        .orderBy('timestamp', descending: true)
-                        .snapshots(),
+stream: FirebaseFirestore.instance
+    .collection('announcement_history')
+    .orderBy('deleted_at', descending: true)
+    .snapshots(),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Padding(
-                          padding: EdgeInsets.all(8.0),
-                          child: Center(child: CircularProgressIndicator()),
-                        );
+                        return const Center(child: CircularProgressIndicator());
                       }
                       final docs = snapshot.data?.docs ?? [];
                       if (docs.isEmpty) {
-                        return Card(
+                        return const Card(
                           child: Padding(
-                            padding: const EdgeInsets.all(16.0),
+                            padding: EdgeInsets.all(16.0),
                             child: Row(
-                              children: const [
+                              children: [
                                 Icon(Icons.history),
                                 SizedBox(width: 12),
-                                Expanded(child: Text('No history yet. You’ll see a log here after posting.')),
+                                Expanded(
+                                    child: Text(
+                                        'No history yet. You’ll see a log here after posting.')),
                               ],
                             ),
                           ),
                         );
                       }
+
                       return ListView.separated(
                         separatorBuilder: (_, __) => const SizedBox(height: 12),
                         shrinkWrap: true,
@@ -590,28 +669,28 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
                               leading: imageUrl.isNotEmpty
                                   ? ClipRRect(
                                       borderRadius: BorderRadius.circular(6),
-                                      child: Image.network(imageUrl, width: 56, height: 56, fit: BoxFit.cover),
+                                      child: Image.network(
+                                        imageUrl,
+                                        width: 56,
+                                        height: 56,
+                                        fit: BoxFit.cover,
+                                      ),
                                     )
                                   : const Icon(Icons.history, size: 40),
-                              title: Text(
-                                data['title'] ?? '',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                              title: Text(data['title'] ?? '',
+                                  maxLines: 1, overflow: TextOverflow.ellipsis),
                               subtitle: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    data['description'] ?? '',
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
+                                  Text(data['description'] ?? '',
+                                      maxLines: 2, overflow: TextOverflow.ellipsis),
                                   if (scheduled != null)
                                     Padding(
                                       padding: const EdgeInsets.only(top: 4.0),
                                       child: Text(
                                         'Scheduled: ${scheduled.year}-${scheduled.month.toString().padLeft(2, '0')}-${scheduled.day.toString().padLeft(2, '0')}',
-                                        style: const TextStyle(fontStyle: FontStyle.italic),
+                                        style: const TextStyle(
+                                            fontStyle: FontStyle.italic),
                                       ),
                                     ),
                                 ],
@@ -622,10 +701,9 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
                       );
                     },
                   ),
-                ],
-              ),
-            ),
-          );
+    ],
+  ),
+);
         },
       ),
     );
@@ -699,14 +777,6 @@ class _AnnouncementCard extends StatelessWidget {
                           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                         ),
                       ),
-                      if (scheduled != null)
-                        Chip(
-                          label: Text(
-                            '${scheduled!.year}-${scheduled!.month.toString().padLeft(2, '0')}-${scheduled!.day.toString().padLeft(2, '0')}',
-                          ),
-                          visualDensity: VisualDensity.compact,
-                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
                     ],
                   ),
                   const SizedBox(height: 6),

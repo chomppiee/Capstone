@@ -39,39 +39,91 @@ class _SignUpPageState extends State<SignUpPage> {
     super.dispose();
   }
 
-  void _signUp() async {
-    setState(() {
-      _showTermsError = !_agreedToTerms;
-    });
+void _signUp() async {
+  setState(() {
+    _showTermsError = !_agreedToTerms;
+  });
 
-    if (_formKey.currentState!.validate() && _agreedToTerms) {
+  if (_formKey.currentState!.validate() && _agreedToTerms) {
+    try {
+      // ✅ Create user using AuthService
       final user = await _auth.createUserWithEmailAndPassword(
-        _emailController.text,
-        _confirmPasswordController.text,
+        _emailController.text.trim(),
+        _confirmPasswordController.text.trim(),
       );
 
       if (user != null) {
+        // ✅ Send verification email
+        await _auth.sendEmailVerification();
+
+        // ✅ Save user data in Firestore
         await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-          'fullname': _nameController.text,
-          'username': _usernameController.text,
-          'email': _emailController.text,
-          'address': _addressController.text,
+          'fullname': _nameController.text.trim(),
+          'username': _usernameController.text.trim(),
+          'email': _emailController.text.trim(),
+          'address': _addressController.text.trim(),
           'createdAt': FieldValue.serverTimestamp(),
-          'points':          0,                     // ← initialize points here
+          'points': 0,
           'events_attended': 0,
         });
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const LoginPage()),
-        );
+        // ✅ Show success & verification dialog
+        if (mounted) {
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              title: const Text(
+                "Verify Your Email",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              content: const Text(
+                "A verification link has been sent to your email address.\n\n"
+                "Please check your inbox and verify your account before logging in.",
+                style: TextStyle(fontSize: 15),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () async {
+                    Navigator.pop(context); // close dialog
+                    Navigator.pop(context); // go back to Login
+                    await _auth.signOut(); // sign out unverified user
+                  },
+                  child: const Text(
+                    "OK",
+                    style: TextStyle(color: Colors.blue),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Registration failed. Try again.')),
+          const SnackBar(content: Text('Registration failed. Please try again.')),
         );
       }
+    } catch (e) {
+      String errorMessage = e.toString();
+      if (errorMessage.contains('email-already-in-use')) {
+        errorMessage = 'This email is already registered.';
+      } else if (errorMessage.contains('weak-password')) {
+        errorMessage = 'Password must be at least 6 characters.';
+      } else if (errorMessage.contains('invalid-email')) {
+        errorMessage = 'Invalid email format.';
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage)),
+      );
     }
   }
+}
+
+
 
   /// Password Validation Function
   String? _validatePassword(String? value) {

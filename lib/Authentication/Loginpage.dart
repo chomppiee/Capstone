@@ -6,6 +6,7 @@ import 'package:segregate1/Widgets/Dashboard.dart';
 import 'package:segregate1/Authentication/registration.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+
 // ↓↓↓ added imports for the redirect logic
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -66,44 +67,56 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  Future<void> _login() async {
-    // Admin shortcut...
-    if (_email.text.trim() == "admin" && _password.text == "123456") {
-      await _saveRememberPrefs();
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const AdminPage()),
-      );
-      return;
-    }
+Future<void> _login() async {
+  // --- Admin Shortcut ---
+  if (_email.text.trim() == "admin" && _password.text == "123456") {
+    await _saveRememberPrefs();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const AdminPage()),
+    );
+    return;
+  }
 
-    if (_formKey.currentState!.validate()) {
-      final user = await _auth.loginUserWithEmailAndPassword(
-        _email.text,
-        _password.text,
+  if (_formKey.currentState!.validate()) {
+    try {
+      final _auth = AuthService();
+      final user = await _auth.signInWithEmailAndPassword(
+        _email.text.trim(),
+        _password.text.trim(),
       );
 
       if (user != null) {
+        if (!user.emailVerified) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Please verify your email before logging in.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+          await _auth.signOut();
+          return;
+        }
+
         await _saveRememberPrefs();
 
-        // ↓↓↓ ONLY ADDITION: redirect third-party accounts to their page
-        final uid = FirebaseAuth.instance.currentUser?.uid;
-        if (uid != null) {
-          final tpSnap = await FirebaseFirestore.instance
-              .collection('third_party_accounts')
-              .doc(uid)
-              .get();
-          if (tpSnap.exists) {
-            if (!mounted) return;
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => const ThirdPartyHomePage()),
-            );
-            return; // stop here so the normal dashboard route doesn't run
-          }
-        }
-        // ↑↑↑ END OF ADDITION
+        // --- Third-Party Account Redirect ---
+        final uid = user.uid;
+        final tpSnap = await FirebaseFirestore.instance
+            .collection('third_party_accounts')
+            .doc(uid)
+            .get();
 
+        if (tpSnap.exists) {
+          if (!mounted) return;
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const ThirdPartyHomePage()),
+          );
+          return;
+        }
+
+        // --- Normal Dashboard Redirect ---
         _dashboard(context);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -113,8 +126,17 @@ class _LoginPageState extends State<LoginPage> {
           ),
         );
       }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Login error: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
+}
+
 
   Future<void> _saveRememberPrefs() async {
     final prefs = await SharedPreferences.getInstance();

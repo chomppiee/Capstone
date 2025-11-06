@@ -26,7 +26,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     setState(() => _isSending = true);
 
     try {
-      await _auth.sendPasswordReset(_emailCtrl.text.trim());
+      await _auth.sendPasswordResetEmail(_emailCtrl.text.trim());
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('A password reset link has been sent. Check your email.'),
